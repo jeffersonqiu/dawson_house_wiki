@@ -1,0 +1,9 @@
+# Vendor or contractor
+name: string          # required
+type: enum            # optional — appliance | contractor | supplier | other
+contact: string       # optional — phone, email, URL
+location: string      # optional
+notes: string         # optional
+related_items: list   # optional — item names or paths
+source: string        # optional
+confidence: enum      # optional — high | medium | low

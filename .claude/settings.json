@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "google-workspace": {
+      "command": "uvx",
+      "args": [
+        "google-workspace-mcp-advanced==1.0.10",
+        "--transport",
+        "stdio",
+        "--tools",
+        "drive",
+        "sheets"
+      ],
+      "envFile": "${workspaceFolder}/.env"
+    }
+  }
+}

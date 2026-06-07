@@ -1,0 +1,129 @@
+# Write Safety
+
+## Roles
+
+| Role | Job |
+|------|-----|
+| **Human** | Capture in `inbox/`, approve review queue, override compiled notes |
+| **Harness** | Maintain `system/` harness config only |
+| **Ingestion** | Import into `raw/` |
+| **Extractor** | Read inputs → structured facts → review queue |
+| **Compiler** | Write `Dawson's wiki/wiki/` |
+| **Conversation** | Read wiki, propose via review queue |
+
+---
+
+## Ownership
+
+Who is responsible for each area. See **folder access** for read/write rules.
+
+| Folder | Owned by | Responsibility |
+|--------|----------|----------------|
+| `Dawson's wiki/inbox/` | Human | Quick capture |
+| `Dawson's wiki/wiki/` | Compiler | Compiled renovation database |
+| `raw/` | Ingestion | Imported Sheets/Drive snapshots |
+| `system/review_queue/` | Human | Approve or reject proposed compiles |
+| `system/constitution/`, `agents/`, `prompts/`, `schemas/` | Harness | Rules, roles, prompts, schemas |
+| `system/state/`, `runs/` | Pipeline agents | Machine logs and sync state |
+
+---
+
+## Folder access
+
+### `Dawson's wiki/inbox/`
+
+| Role | Read | Write |
+|------|------|-------|
+| Human | ✓ | ✓ |
+| Harness | ✓ | ✗ |
+| Ingestion | ✓ | ✗ |
+| Extractor | ✓ | ✗ |
+| Compiler | ✓ | ✗ |
+| Conversation | ✓ | ✗ |
+
+### `Dawson's wiki/wiki/` (compiled)
+
+| Role | Read | Write |
+|------|------|-------|
+| Human | ✓ | override only (not default workflow) |
+| Harness | ✓ | ✗ |
+| Ingestion | ✓ | ✗ |
+| Extractor | ✓ | ✗ |
+| Compiler | ✓ | ✓ per [note-creation.md](note-creation.md); merge only |
+| Conversation | ✓ | ✗ — propose via review queue |
+
+### `raw/sheets/`, `raw/drive/`
+
+| Role | Read | Write |
+|------|------|-------|
+| Human | ✓ | ✓ manual export drops |
+| Harness | ✓ | ✗ |
+| Ingestion | ✓ | ✓ add/update snapshots |
+| Extractor | ✓ | ✗ |
+| Compiler | ✓ | ✗ |
+| Conversation | ✓ | ✗ |
+
+### `system/constitution/`, `agents/`, `prompts/`, `schemas/`
+
+| Role | Read | Write |
+|------|------|-------|
+| Human | ✓ | ✓ project design (rare) |
+| **Harness** | ✓ | **✓ only agent that may write** |
+| Ingestion | ✓ | ✗ |
+| Extractor | ✓ | ✗ |
+| Compiler | ✓ | ✗ |
+| Conversation | ✓ | ✗ |
+
+### `system/review_queue/`
+
+| Role | Read | Write |
+|------|------|-------|
+| Human | ✓ | ✓ approve, reject, comment |
+| Harness | ✓ | ✗ |
+| Ingestion | ✓ | ✗ |
+| Extractor | ✓ | ✓ add proposals |
+| Compiler | ✓ | ✗ until human approves |
+| Conversation | ✓ | ✓ add proposals |
+
+### `system/state/`, `system/runs/`
+
+| Role | Read | Write |
+|------|------|-------|
+| Human | ✓ | ✗ |
+| Harness | ✓ | ✗ |
+| Ingestion | ✓ | ✓ |
+| Extractor | ✓ | ✓ |
+| Compiler | ✓ | ✓ |
+| Conversation | ✓ | ✓ |
+
+Pipeline agents write logs and machine state here. Not renovation knowledge.
+
+### Project root (`AGENT.md`, `HARNESS_PLAN.md`)
+
+| Role | Read | Write |
+|------|------|-------|
+| Human | ✓ | ✓ |
+| Harness | ✓ | ✓ harness docs only |
+| All other agents | ✓ | ✗ |
+
+---
+
+## Review queue before compiler writes
+
+- New room, vendor, or task note
+- Price, vendor, or status change
+- Task done or cancelled
+- New decisions log row
+- Low extractor confidence
+
+File: `system/review_queue/{YYYY-MM-DD}-{slug}.md`
+
+---
+
+## Global never (all agents except where allowed above)
+
+- Delete or rewrite `inbox/` or `raw/` without explicit user request
+- Commit secrets
+- Auto-sync Google APIs (not built)
+- Put harness material inside the Obsidian vault
+- **Pipeline agents writing `system/constitution/`, `agents/`, `prompts/`, or `schemas/`**

@@ -1,0 +1,11 @@
+# Follow-up or action item
+id: string            # required — TASK-0001 format
+title: string         # required
+status: enum          # required — open | done | cancelled
+area: string          # optional — room or topic
+due: string           # optional — date or vague ("before tiling")
+owner: string         # optional — jeff | vendor name
+notes: string         # optional
+related: list         # optional — note paths or item names
+source: string        # optional
+confidence: enum      # optional — high | medium | low

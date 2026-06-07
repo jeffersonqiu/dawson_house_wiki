@@ -1,0 +1,15 @@
+.env
+.env.local
+credentials.json
+**/service-account*.json
+.DS_Store
+__pycache__/
+*.pyc
+
+# Obsidian session state (vault config is tracked)
+**/.obsidian/workspace.json
+**/.obsidian/workspace-mobile.json
+
+# Secrets and sync tokens
+system/state/tokens/
+system/state/*.secret.json

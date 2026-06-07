@@ -1,0 +1,11 @@
+# Room item — e.g. hob, fridge, aircon
+name: string          # required — display name
+room: string          # required — e.g. Kitchen
+status: enum          # optional — researching | shortlisted | ordered | installed | n/a
+vendor: string        # optional — link to Vendors/{name}.md
+model: string         # optional
+price: string         # optional — keep as written ("$1.3k", "1040")
+currency: string      # optional — default SGD when clear
+notes: string         # optional — free text
+source: string        # optional — inbox path, raw file, or sheet ref
+confidence: enum      # optional — high | medium | low
