@@ -2,7 +2,24 @@
 
 **Date:** 2026-06-07
 **Proposed by:** Extractor
-**Status:** awaiting human approval
+**Status:** ✅ APPROVED — WITH CANONICAL RENAME (2026-06-08, by Jefferson)
+
+**Human decision notes:**
+- **Room name (call-out #2): use `Common Bedroom`, NOT `Guest Bedroom`.** This matches the
+  SIGNED CONTRACT's terminology (Bud Studio Appendix A, Section J item 10), which is the
+  legally authoritative as-built reference and the document most likely to be cross-referenced
+  by future scope/defects/warranty conversations. Rename the folder and both item notes'
+  `room:` field accordingly:
+  - `Dawson's wiki/wiki/Rooms/Common Bedroom/Common Bedroom.md` (room note)
+  - `Dawson's wiki/wiki/Rooms/Common Bedroom/Murphy Bedframe.md`
+  - `Dawson's wiki/wiki/Rooms/Common Bedroom/Ironing Set.md`
+  Note in the room note's body that this room is ALSO referred to as "Study Room/Guest
+  Bedroom" (moodboard v1), "Bedroom 2" (moodboard v2), and "Guest Bedroom" (furniture
+  tracker) — so a reader who knows it by any of those names can still find it (the Extractor's
+  drafted alias-list is good — keep it, just swap the canonical heading to "Common Bedroom").
+- Master Bedroom items/room note: approved as proposed, no changes.
+- All "shortlisted"/medium-or-lower confidence ratings accepted as written — none of these
+  bedroom items should be presented as settled purchases (no corroborating order docs exist).
 
 ## What to change
 

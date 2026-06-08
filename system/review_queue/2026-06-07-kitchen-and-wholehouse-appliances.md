@@ -2,7 +2,22 @@
 
 **Date:** 2026-06-07
 **Proposed by:** Extractor
-**Status:** awaiting human approval
+**Status:** ✅ APPROVED — WITH ONE STRUCTURAL CHANGE (2026-06-08, by Jefferson)
+
+**Human decision notes:**
+- **Aircon placement (call-out #1) — OVERRIDE the proposed Kitchen placement.** Create a new
+  `Whole House` room folder (`Dawson's wiki/wiki/Rooms/Whole House/Whole House.md`) and file
+  `Aircon.md` there instead of under Kitchen. Rationale: the Aircon system spans Master
+  Bedroom + Living/Common Bedroom zones (per the Gain City order itself) — filing a
+  whole-house system under "Kitchen" would be actively misleading, not just imperfect. This
+  also creates the canonical home for future cross-cutting items the Extractor flagged
+  (Day Curtain, Painting Works, etc.) — establishing the "Whole House" pattern now.
+- All other items (Fridge, Washer-Dryer, Microwave, Hob, Hood, Oven) approved as proposed,
+  staying under `Rooms/Kitchen/`.
+- Kitchen room note seed approved as written, MINUS the Aircon Appendix-A cross-reference
+  (move that reference to the new Whole House note instead).
+- Price-discrepancy handling (both tracker and order-line figures recorded side-by-side) —
+  approved as the right call; do not silently pick one figure.
 
 ## What to change
 

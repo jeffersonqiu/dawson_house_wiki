@@ -1,0 +1,24 @@
+---
+name: Decisions Log
+confidence: high
+---
+
+# Decisions Log
+
+Single master log of important renovation decisions — per `system/constitution/note-creation.md`
+("Important decision → `04 Decisions.md` (single log first)"). Append new rows as decisions
+are confirmed; do not create a separate `Decisions/` folder yet.
+
+| Date | Decision | Why / context | Source |
+|------|----------|---------------|--------|
+| 2026-03-31 | Selected [[Bud Studio]] as ID/renovation contractor; signed Renovation Agreement, Contract Sum **S$72,805.00** (incl. a late −$1,000 discount) | Chosen over 3 other quotes — [[Senso Studio]] (~$106k & a reduced-scope variant), [[ZX Design (Kove Interior Design)]] (~$66,775), [[Reno Studio (The Good Rocket)]] ($68,750). Notably, Bud Studio was **not** the cheapest option — the "why Bud Studio" rationale (design fit, rapport, scope completeness, etc.) is not explicitly documented in any source file; worth capturing here if/when the story surfaces. | `raw/drive/signed-renovation-contract-marcella-jefferson-2026-06-07.md` |
+| ~2026-04 (render review) | **Dry pantry layout: chose Option 1 over Option 2** | *"Prefer dry pantry option 1 compared to 2. Let's go with this."* | `raw/drive/skyville-dawson-bud-studio-first-draft-comments-2026-06-07.md` (page 6) |
+| ~2026-04 (render review) | **No dishwasher** | *"We've decided — we won't have a dishwasher!"* — explicit, definitive. See [[Kitchen]]. | `raw/drive/skyville-dawson-bud-studio-first-draft-comments-2026-06-07.md` (page 9) |
+| ~2026-04 (render review) | **One combo washer/dryer only** (not separate units) | *"We'll only have 1 wash & dry machine"* — confirms the [[Washer-Dryer]] purchase (Sharp combo unit) was a deliberate design choice, not a budget compromise. | `raw/drive/skyville-dawson-bud-studio-first-draft-comments-2026-06-07.md` (page 9) |
+| ~2026-04 (render review) | **Vanity / study desk width: 1 metre — APPROVED** | *"Study / vanity table — actually 1m is ok!"* — confirms the [[Working-Vanity Desk]] (Interdesk Classic, W100) spec. | `raw/drive/skyville-dawson-bud-studio-first-draft-comments-2026-06-07.md` (page 16) |
+| 2026-06-06 (order date) | **TV size: DECIDED — 65" Samsung Frame** (75" was floated mid-review but not adopted) | Gain City Sales Order SO-B0000296814 confirms a 65" unit was purchased and paid for — the completed, paid order is the strongest signal of the final call. The 75" idea was raised in render-review comments (*"We're considering a 75" TV, can we try to see how that would look like on 2nd round?"*) but evidently not pursued further. See [[TV]]. | `raw/drive/gain-city-tv-samsung-2026-06-07.md`; `raw/drive/skyville-dawson-bud-studio-first-draft-comments-2026-06-07.md` (page 5) |
+
+---
+*Compiled 2026-06-08 — seeded from 6 approved candidate rows across
+`system/review_queue/2026-06-07-bud-studio-vendor-and-contract.md` (row 1) and
+`system/review_queue/2026-06-07-tasks-and-design-decisions.md` (rows 2–6).*

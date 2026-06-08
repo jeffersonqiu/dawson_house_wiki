@@ -2,7 +2,20 @@
 
 **Date:** 2026-06-07
 **Proposed by:** Extractor
-**Status:** awaiting human approval
+**Status:** ✅ APPROVED (2026-06-08, by Jefferson)
+
+**Human decision notes:**
+- All 7 tasks (TASK-0001 through TASK-0007) approved as proposed, including TASK-0006's
+  three-in-one grouping (kitchen stove/sink/oven/hood layout) — agree it's one decision
+  thread, not three independent tasks.
+- All 5 candidate `04 Decisions.md` rows approved for inclusion in the master decisions log,
+  including the TV-size row with its flagged 65"-vs-75" note (the Gain City order is the
+  closing signal — treat as DECIDED: 65", with the review-comment musing recorded as context
+  for why the question briefly came up).
+- TASK-0003 (shoe rack on bomb shelter door) — agreed it may be new/out-of-scope; keep the
+  Change-Order flag in the note as written so it surfaces naturally in conversation with
+  Bud Studio.
+- Owners/areas/due-date inferences accepted as written.
 
 ## What to change
 

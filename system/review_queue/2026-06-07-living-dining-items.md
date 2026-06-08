@@ -2,7 +2,18 @@
 
 **Date:** 2026-06-07
 **Proposed by:** Extractor
-**Status:** awaiting human approval
+**Status:** ✅ APPROVED (2026-06-08, by Jefferson)
+
+**Human decision notes:**
+- Room name: keep combined `Living-Dining` (call-out #1) — matches the tracker, floor plan,
+  and Bud Studio scope, all of which treat it as one open-plan zone.
+- All 6 item notes approved, INCLUDING the smaller decor items (Sound Bar, TV Console,
+  Coffee Machine, Table Lamps) — per-item notes are the established pattern (see
+  `Kitchen/Induction Hob.md` precedent in note-creation.md) and these are cheap to maintain
+  even at lower confidence; resolves call-out #2 in favour of "create them."
+- TV-size note (call-out #3): keep as written — the 65" Gain City order is the strongest
+  signal of the final call; also reflected in the approved `04 Decisions.md` candidate row
+  from the companion tasks/decisions proposal.
 
 ## What to change
 

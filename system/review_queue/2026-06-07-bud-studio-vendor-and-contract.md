@@ -2,7 +2,15 @@
 
 **Date:** 2026-06-07
 **Proposed by:** Extractor
-**Status:** awaiting human approval
+**Status:** ✅ APPROVED (2026-06-08, by Jefferson)
+
+**Human decision notes:**
+- Approved as proposed — single combined vendor note for Bud Studio Pte Ltd + Fruit Design
+  Practice Pte Ltd (billing entity), with both registration numbers documented in the body.
+- Approved seeding `04 Decisions.md` with the candidate row provided below.
+- Quotation reconciliation ($77,725 → $75,700 → $72,805) accepted as written; the signed
+  contract figure (S$72,805.00) is the sole authoritative current fact; the other two are
+  historical-evolution context only.
 
 ## What to change
 

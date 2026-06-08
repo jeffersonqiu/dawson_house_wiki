@@ -2,7 +2,18 @@
 
 **Date:** 2026-06-07
 **Proposed by:** Extractor
-**Status:** awaiting human approval
+**Status:** ✅ APPROVED (2026-06-08, by Jefferson)
+
+**Human decision notes:**
+- Approved as THREE separate vendor notes (Senso Studio / ZX Design (Kove Interior Design) /
+  Reno Studio (The Good Rocket)) — matches the Bud Studio note's pattern and keeps each
+  vendor's distinct contacts/quotes/contract numbers cleanly separated, per the Extractor's
+  primary recommendation over the single-combined-note alternative in call-out #1.
+- "ZX Design" vs. "KOVE Interior Design" naming ambiguity: keep as proposed (one vendor note,
+  both names documented) — I don't have independent confirmation either way, so the
+  Extractor's "same vendor, two names" inference stands as the working assumption; flag
+  remains visible in the note for future correction if it surfaces.
+- Comparison summary table approved for inclusion / future use in a vendor-comparison page.
 
 ## What to change
 
