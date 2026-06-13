@@ -104,6 +104,149 @@ launchctl load ~/Library/LaunchAgents/com.dawsonhouse.wikibot.plist
 
 ---
 
+## Running it permanently on GCP (Compute Engine, Always Free tier)
+
+This avoids needing your Mac to be on. A small `e2-micro` VM in one of the Always Free
+regions runs the bot 24/7 for **$0/month** (within free-tier limits — see "Costs" below).
+
+Deployment files for this live in `bot/gcp/`:
+- `dawsonhouse-wikibot.service.example` — systemd unit (Linux equivalent of the launchd
+  plist above)
+- `setup-vm.sh` — one-time provisioning script you run on the VM
+- `sync-wiki.sh` — keeps the VM's copy of the repo in sync with GitHub (see "Keeping the
+  VM in sync" below)
+
+### Quick answers first
+
+- **Does the VM need its own `git pull`?** Yes. The VM has its own independent clone of
+  this repo — it does not share a filesystem with your Mac. `bot/gcp/sync-wiki.sh`,
+  installed via cron by `setup-vm.sh`, runs `git pull` (fast-forward only) every 15
+  minutes and restarts the bot service if anything changed, so wiki updates you `/compile`
+  and push from your Mac show up on the bot within ~15 minutes automatically.
+- **Does all the wiki content live there?** Yes — it's a normal clone of
+  `github.com/jeffersonqiu/dawson_house_wiki` (public repo), nothing is excluded. The bot
+  reads `Dawson's wiki/wiki/**` from that local clone exactly as it does on your Mac.
+- **Any size concerns?** No. The whole git-tracked repo is well under 1MB (the wiki itself
+  is ~200KB). The free-tier VM has 30GB of disk. This is a non-issue even if the wiki
+  grows 100x.
+
+### Step 0 — Re-authenticate gcloud (you need to do this — interactive)
+
+The gcloud CLI on this Mac (`/Users/jeffersonqiu/google-cloud-sdk/bin/gcloud`, v475.0.0,
+project `citric-inkwell-308409`) currently has an expired/invalid auth token. Before
+creating anything, run:
+
+```bash
+gcloud auth login
+```
+
+This opens a browser for you to sign in with `jeffersonqiu1@gmail.com`. Then confirm the
+right project is selected:
+
+```bash
+gcloud config set project citric-inkwell-308409
+gcloud config get-value project
+```
+
+### Step 1 — Create the VM
+
+Always Free e2-micro is available only in these regions: `us-west1` (Oregon),
+`us-central1` (Iowa), `us-east1` (South Carolina). Pick whichever is closest/fine for you
+(`us-west1` is closest to Singapore-ish latency-wise but it won't matter much for a
+Telegram bot).
+
+```bash
+gcloud compute instances create dawsonhouse-wikibot \
+  --zone=us-west1-b \
+  --machine-type=e2-micro \
+  --image-family=debian-12 \
+  --image-project=debian-cloud \
+  --boot-disk-size=30GB \
+  --boot-disk-type=pd-standard \
+  --tags=dawsonhouse-wikibot
+```
+
+Notes:
+- `pd-standard` (not SSD) and `30GB` are both required to stay within the free tier.
+- No firewall rules needed — the bot uses long-polling (outbound connections only to
+  Telegram + Anthropic APIs), so nothing needs to accept inbound traffic besides the
+  default SSH (which `gcloud compute ssh` handles automatically).
+
+### Step 2 — SSH in and run the setup script
+
+```bash
+gcloud compute ssh dawsonhouse-wikibot --zone=us-west1-b
+```
+
+(First time: gcloud will offer to generate an SSH key for you — accept.)
+
+Once connected, download and run the setup script (it's checked into the public repo, so
+you can fetch it directly):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/jeffersonqiu/dawson_house_wiki/main/bot/gcp/setup-vm.sh -o setup-vm.sh
+chmod +x setup-vm.sh
+./setup-vm.sh
+```
+
+This installs git/python3/uv, clones the repo to `~/dawson_house_wiki`, creates
+`bot/.env` from the template, installs+enables the systemd service (but doesn't start it
+yet), and installs the cron sync job.
+
+### Step 3 — Configure secrets on the VM
+
+```bash
+nano ~/dawson_house_wiki/bot/.env
+```
+
+Fill in the same values as your local `bot/.env` (Telegram bot token, your Telegram user
+ID(s), Anthropic API key). **Use the same Telegram bot token as your Mac, or a different
+one — just don't run both your Mac's bot and the VM's bot with the same token at the same
+time** (Telegram's long-polling API only allows one consumer per token; running two will
+cause "Conflict: terminated by other getUpdates request" errors). Once the VM version is
+working, stop the one on your Mac (`launchctl unload ...`).
+
+### Step 4 — Start and verify
+
+```bash
+sudo systemctl start dawsonhouse-wikibot
+sudo systemctl status dawsonhouse-wikibot
+journalctl -u dawsonhouse-wikibot -f
+```
+
+Message your bot on Telegram — it should respond. Ctrl-C out of `journalctl -f` once
+confirmed (the service keeps running).
+
+### Keeping the VM in sync with wiki updates
+
+After you run `/compile` locally and push to GitHub, the VM's cron job
+(`bot/gcp/sync-wiki.sh`, runs every 15 min) will:
+1. `git fetch` + fast-forward merge `origin/main`
+2. If the repo actually changed, `sudo systemctl restart dawsonhouse-wikibot` so the bot
+   reloads the updated wiki content
+
+Check sync logs: `tail -f ~/dawson_house_wiki/bot/logs/sync.log`
+
+To force an immediate sync without waiting for cron:
+```bash
+~/dawson_house_wiki/bot/gcp/sync-wiki.sh
+```
+
+### Costs
+
+`e2-micro` + 30GB standard persistent disk in `us-west1`/`us-central1`/`us-east1` is
+covered by GCP's [Always Free tier](https://cloud.google.com/free/docs/free-cloud-features#compute)
+— **$0/month** as long as you stay within one free instance and don't add extra disks,
+static IPs left unattached, etc. Outbound network usage from a Telegram bot is minimal
+(text messages only) and well within the 1GB/month free egress to most destinations.
+
+To stop incurring any possibility of charges later, you can always:
+```bash
+gcloud compute instances delete dawsonhouse-wikibot --zone=us-west1-b
+```
+
+---
+
 ## Usage
 
 In Telegram, message your bot directly (or in a group it's been added to, if you want

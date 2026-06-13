@@ -1,0 +1,35 @@
+[Unit]
+Description=Dawson House Wiki Telegram bot (Conversation agent)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Replace with the absolute path to the cloned repo on the VM, e.g.
+# /home/jeffersonqiu/dawson_house_wiki
+WorkingDirectory=REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT/bot
+ExecStart=REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT/bot/run.sh
+Restart=on-failure
+RestartSec=10
+
+# Hardening (optional but recommended — the bot only needs to read the repo
+# and reach the internet for Telegram + Anthropic APIs)
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+
+# --- SETUP ---
+# 1. Copy this file to /etc/systemd/system/dawsonhouse-wikibot.service
+#    sudo cp dawsonhouse-wikibot.service /etc/systemd/system/
+# 2. Replace REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT with the real path (both lines above)
+#    sudo sed -i 's#REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT#/home/YOUR_USER/dawson_house_wiki#g' /etc/systemd/system/dawsonhouse-wikibot.service
+# 3. Reload systemd, enable on boot, start now:
+#    sudo systemctl daemon-reload
+#    sudo systemctl enable --now dawsonhouse-wikibot
+# 4. Check status / logs:
+#    sudo systemctl status dawsonhouse-wikibot
+#    journalctl -u dawsonhouse-wikibot -f
+# 5. After a `git pull` to update the wiki or bot code, restart:
+#    sudo systemctl restart dawsonhouse-wikibot
