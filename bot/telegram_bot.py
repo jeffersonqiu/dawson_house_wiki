@@ -9,6 +9,13 @@ Required environment variables (see bot/.env.example):
     ANTHROPIC_API_KEY        — Claude API key
     CLAUDE_MODEL             — optional, defaults to claude-sonnet-4-6
 
+GCP Secret Manager (optional, used for deployment — see bot/gcp/):
+    If GCP_PROJECT_ID is set and TELEGRAM_BOT_TOKEN / ANTHROPIC_API_KEY are NOT
+    present in the environment, they're fetched from Secret Manager (secret ID
+    == variable name, "latest" version) using the host's Application Default
+    Credentials. Locally this is never triggered — bot/.env supplies both
+    values directly. See bot/gcp/setup-secrets.sh.
+
 Design notes:
     - Read-only Conversation agent: answers questions from the compiled wiki
       (Dawson's wiki/wiki/**). Never writes to the wiki directly (per
@@ -58,16 +65,53 @@ TELEGRAM_MAX_MESSAGE_LEN = 4096
 conversation_history: dict[int, list[dict[str, str]]] = {}
 
 
+def _secret_from_manager(project_id: str, secret_id: str) -> str | None:
+    """Fetch the latest version of `secret_id` from GCP Secret Manager.
+
+    Lazily imports google-cloud-secret-manager so local runs (which never set
+    GCP_PROJECT_ID) don't require the dependency to be installed.
+    """
+    try:
+        from google.cloud import secretmanager
+    except ImportError:
+        logger.error(
+            "GCP_PROJECT_ID is set but google-cloud-secret-manager isn't installed "
+            "(it's in requirements.txt — re-run bot/run.sh)."
+        )
+        return None
+
+    try:
+        client = secretmanager.SecretManagerServiceClient()
+        name = f"projects/{project_id}/secrets/{secret_id}/versions/latest"
+        response = client.access_secret_version(name=name)
+        return response.payload.data.decode("utf-8").strip()
+    except Exception:
+        logger.exception("Failed to fetch secret '%s' from Secret Manager", secret_id)
+        return None
+
+
+def _config_value(name: str, project_id: str | None) -> str | None:
+    """Env var (incl. bot/.env) first; GCP Secret Manager fallback if configured."""
+    value = os.environ.get(name)
+    if value:
+        return value
+    if project_id:
+        return _secret_from_manager(project_id, name)
+    return None
+
+
 def _load_config() -> dict:
     load_dotenv()  # loads bot/.env if present, falls back to process env
 
-    token = os.environ.get("TELEGRAM_BOT_TOKEN")
-    if not token:
-        sys.exit("TELEGRAM_BOT_TOKEN is not set (see bot/.env.example)")
+    project_id = os.environ.get("GCP_PROJECT_ID")  # set on the GCP VM only
 
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    token = _config_value("TELEGRAM_BOT_TOKEN", project_id)
+    if not token:
+        sys.exit("TELEGRAM_BOT_TOKEN is not set (see bot/.env.example or bot/gcp/setup-secrets.sh)")
+
+    api_key = _config_value("ANTHROPIC_API_KEY", project_id)
     if not api_key:
-        sys.exit("ANTHROPIC_API_KEY is not set (see bot/.env.example)")
+        sys.exit("ANTHROPIC_API_KEY is not set (see bot/.env.example or bot/gcp/setup-secrets.sh)")
 
     allowed_raw = os.environ.get("TELEGRAM_ALLOWED_USER_IDS", "")
     allowed_ids = {

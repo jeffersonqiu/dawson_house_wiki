@@ -18,10 +18,16 @@
 #   6. Installs a cron job that runs sync-wiki.sh every 15 minutes to keep
 #      the VM's repo copy up to date with origin/main
 #
+# Secrets (TELEGRAM_BOT_TOKEN, ANTHROPIC_API_KEY): fetched from GCP Secret
+# Manager at runtime (see bot/gcp/setup-secrets.sh, run on your Mac first) —
+# this script wires up GCP_PROJECT_ID in the systemd unit so that works.
+#
 # After running this script, you still need to:
-#   - Edit ~/dawson_house_wiki/bot/.env with your real TELEGRAM_BOT_TOKEN,
-#     ANTHROPIC_API_KEY, and TELEGRAM_ALLOWED_USER_IDS
-#   - Run: sudo systemctl restart dawsonhouse-wikibot
+#   - Edit ~/dawson_house_wiki/bot/.env and set TELEGRAM_ALLOWED_USER_IDS
+#     (and CLAUDE_MODEL if you want a non-default model). Leave
+#     TELEGRAM_BOT_TOKEN / ANTHROPIC_API_KEY blank — they come from Secret
+#     Manager, assuming setup-secrets.sh has been run.
+#   - Run: sudo systemctl start dawsonhouse-wikibot
 #   - Test the bot on Telegram
 
 set -euo pipefail
@@ -56,17 +62,24 @@ cd "$REPO_DIR"
 echo "==> Setting up bot/.env..."
 if [ ! -f bot/.env ]; then
   cp bot/.env.example bot/.env
-  echo "    Created bot/.env from template. >>> YOU MUST EDIT THIS FILE WITH REAL VALUES <<<"
+  echo "    Created bot/.env from template. Set TELEGRAM_ALLOWED_USER_IDS"
+  echo "    (TELEGRAM_BOT_TOKEN / ANTHROPIC_API_KEY come from Secret Manager — leave blank):"
   echo "    nano $REPO_DIR/bot/.env"
 else
   echo "    bot/.env already exists, leaving it alone."
 fi
 
+echo "==> Detecting GCP project ID from VM metadata..."
+PROJECT_ID="$(curl -s -H 'Metadata-Flavor: Google' \
+  'http://metadata.google.internal/computeMetadata/v1/project/project-id')"
+echo "    Project: ${PROJECT_ID}"
+
 echo "==> Installing systemd service..."
 SERVICE_SRC="bot/gcp/dawsonhouse-wikibot.service.example"
 SERVICE_DST="/etc/systemd/system/${SERVICE_NAME}.service"
-sed "s#REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT#${REPO_DIR}#g" "$SERVICE_SRC" \
-  | sudo tee "$SERVICE_DST" > /dev/null
+sed -e "s#REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT#${REPO_DIR}#g" \
+    -e "s#REPLACE_WITH_GCP_PROJECT_ID#${PROJECT_ID}#g" \
+    "$SERVICE_SRC" | sudo tee "$SERVICE_DST" > /dev/null
 sudo systemctl daemon-reload
 sudo systemctl enable "$SERVICE_NAME"
 echo "    Service installed and enabled (will start on boot)."

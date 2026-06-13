@@ -110,11 +110,19 @@ This avoids needing your Mac to be on. A small `e2-micro` VM in one of the Alway
 regions runs the bot 24/7 for **$0/month** (within free-tier limits — see "Costs" below).
 
 Deployment files for this live in `bot/gcp/`:
+- `setup-secrets.sh` — run on your Mac first (see Step 0.5); creates
+  `TELEGRAM_BOT_TOKEN` and `ANTHROPIC_API_KEY` as GCP Secret Manager secrets and
+  grants the VM's service account read access
 - `dawsonhouse-wikibot.service.example` — systemd unit (Linux equivalent of the launchd
   plist above)
 - `setup-vm.sh` — one-time provisioning script you run on the VM
 - `sync-wiki.sh` — keeps the VM's copy of the repo in sync with GitHub (see "Keeping the
   VM in sync" below)
+
+**Secrets**: `TELEGRAM_BOT_TOKEN` and `ANTHROPIC_API_KEY` are stored in **GCP Secret
+Manager**, not in a plaintext `bot/.env` on the VM. The bot fetches them at startup via
+the VM's default service account (see `_secret_from_manager` in `telegram_bot.py`).
+`TELEGRAM_ALLOWED_USER_IDS` (not a credential) still lives in `bot/.env` on the VM.
 
 ### Quick answers first
 
@@ -147,6 +155,22 @@ right project is selected:
 gcloud config set project citric-inkwell-308409
 gcloud config get-value project
 ```
+
+### Step 0.5 — Create the secrets in Secret Manager (run on your Mac)
+
+After `gcloud auth login` and `gcloud config set project citric-inkwell-308409`, with
+your local `bot/.env` already filled in (Step 4 above):
+
+```bash
+cd "dawson_house_wiki/bot/gcp"
+./setup-secrets.sh
+```
+
+This enables the Secret Manager API, creates `TELEGRAM_BOT_TOKEN` and `ANTHROPIC_API_KEY`
+as secrets from your local `bot/.env` values (without printing them), and grants the
+Compute Engine default service account `roles/secretmanager.secretAccessor` on both —
+so the VM can read them once it exists. Safe to re-run later (e.g. to rotate a key — it
+adds a new secret version).
 
 ### Step 1 — Create the VM
 
@@ -190,21 +214,25 @@ chmod +x setup-vm.sh
 ```
 
 This installs git/python3/uv, clones the repo to `~/dawson_house_wiki`, creates
-`bot/.env` from the template, installs+enables the systemd service (but doesn't start it
-yet), and installs the cron sync job.
+`bot/.env` from the template, detects the GCP project ID and bakes it into the systemd
+unit as `GCP_PROJECT_ID` (so the Secret Manager fallback works), and installs+enables the
+service (but doesn't start it yet), plus the cron sync job.
 
-### Step 3 — Configure secrets on the VM
+### Step 3 — Configure `bot/.env` on the VM
 
 ```bash
 nano ~/dawson_house_wiki/bot/.env
 ```
 
-Fill in the same values as your local `bot/.env` (Telegram bot token, your Telegram user
-ID(s), Anthropic API key). **Use the same Telegram bot token as your Mac, or a different
-one — just don't run both your Mac's bot and the VM's bot with the same token at the same
-time** (Telegram's long-polling API only allows one consumer per token; running two will
-cause "Conflict: terminated by other getUpdates request" errors). Once the VM version is
-working, stop the one on your Mac (`launchctl unload ...`).
+Set `TELEGRAM_ALLOWED_USER_IDS` to the same value as your local `bot/.env`. **Leave
+`TELEGRAM_BOT_TOKEN` and `ANTHROPIC_API_KEY` blank** — they're fetched from Secret Manager
+(Step 0.5) via the VM's service account.
+
+**Use the same Telegram bot token as your Mac, or a different one — just don't run both
+your Mac's bot and the VM's bot with the same token at the same time** (Telegram's
+long-polling API only allows one consumer per token; running two will cause "Conflict:
+terminated by other getUpdates request" errors). Once the VM version is working, stop the
+one on your Mac (`launchctl unload ...`).
 
 ### Step 4 — Start and verify
 

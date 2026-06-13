@@ -12,6 +12,12 @@ ExecStart=REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT/bot/run.sh
 Restart=on-failure
 RestartSec=10
 
+# Enables the Secret Manager fallback in telegram_bot.py: TELEGRAM_BOT_TOKEN
+# and ANTHROPIC_API_KEY are fetched from Secret Manager (not bot/.env) using
+# the VM's default service account. Run bot/gcp/setup-secrets.sh (on your Mac)
+# first to create the secrets and grant access. setup-vm.sh fills this in.
+Environment=GCP_PROJECT_ID=REPLACE_WITH_GCP_PROJECT_ID
+
 # Hardening (optional but recommended — the bot only needs to read the repo
 # and reach the internet for Telegram + Anthropic APIs)
 NoNewPrivileges=true
