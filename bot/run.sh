@@ -8,6 +8,10 @@ set -euo pipefail
 BOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$BOT_DIR"
 
+# uv installs to ~/.local/bin, which isn't on PATH for systemd services
+# (they don't source .bashrc). Harmless no-op if it's already on PATH.
+export PATH="$HOME/.local/bin:$PATH"
+
 if [ ! -d ".venv" ]; then
     echo "Creating virtualenv in bot/.venv ..."
     uv venv .venv
