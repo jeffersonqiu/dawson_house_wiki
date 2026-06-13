@@ -13,3 +13,7 @@ __pycache__/
 # Secrets and sync tokens
 system/state/tokens/
 system/state/*.secret.json
+
+# Telegram bot — local runtime artifacts
+bot/.venv/
+bot/logs/*.log

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  launchd job definition to keep the Dawson House Wiki Telegram bot running
+  in the background on macOS, including across reboots/logins.
+
+  SETUP:
+    1. Copy this file to ~/Library/LaunchAgents/com.dawsonhouse.wikibot.plist
+    2. Replace REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT below with the real
+       absolute path, e.g. /Users/jeffersonqiu/Desktop/projects/dawson_house_wiki
+    3. Load it:
+         launchctl load ~/Library/LaunchAgents/com.dawsonhouse.wikibot.plist
+    4. Check it's running:
+         launchctl list | grep dawsonhouse
+    5. Logs go to bot/logs/stdout.log and bot/logs/stderr.log
+
+  TO STOP / DISABLE:
+         launchctl unload ~/Library/LaunchAgents/com.dawsonhouse.wikibot.plist
+
+  TO RESTART AFTER A CODE CHANGE:
+         launchctl unload ~/Library/LaunchAgents/com.dawsonhouse.wikibot.plist
+         launchctl load ~/Library/LaunchAgents/com.dawsonhouse.wikibot.plist
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.dawsonhouse.wikibot</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT/bot/run.sh</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT/bot</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+        <key>Crashed</key>
+        <true/>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT/bot/logs/stdout.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT/bot/logs/stderr.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+</dict>
+</plist>
