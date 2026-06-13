@@ -90,7 +90,8 @@ echo "==> Installing cron job for repo sync (every 15 minutes)..."
 chmod +x bot/gcp/sync-wiki.sh
 CRON_LINE="*/15 * * * * ${REPO_DIR}/bot/gcp/sync-wiki.sh >> ${REPO_DIR}/bot/logs/sync.log 2>&1"
 mkdir -p bot/logs
-( crontab -l 2>/dev/null | grep -vF "sync-wiki.sh" ; echo "$CRON_LINE" ) | crontab -
+EXISTING_CRON="$(crontab -l 2>/dev/null | grep -vF "sync-wiki.sh" || true)"
+printf '%s\n%s\n' "$EXISTING_CRON" "$CRON_LINE" | grep -v '^$' | crontab -
 echo "    Cron job installed."
 
 # sync-wiki.sh calls `sudo systemctl restart`, so allow this user to run that
