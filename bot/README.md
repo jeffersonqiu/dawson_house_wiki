@@ -187,11 +187,22 @@ gcloud compute instances create dawsonhouse-wikibot \
   --image-project=debian-cloud \
   --boot-disk-size=30GB \
   --boot-disk-type=pd-standard \
-  --tags=dawsonhouse-wikibot
+  --tags=dawsonhouse-wikibot \
+  --scopes=cloud-platform
 ```
 
 Notes:
 - `pd-standard` (not SSD) and `30GB` are both required to stay within the free tier.
+- `--scopes=cloud-platform` is required for the Secret Manager fallback — without it,
+  the VM's service account gets a metadata token that's valid for IAM purposes but
+  rejected by the Secret Manager API with `403 ACCESS_TOKEN_SCOPE_INSUFFICIENT`, even
+  though `setup-secrets.sh` granted the right IAM role. If you forgot this flag on an
+  existing VM, fix it with (stop → update → start):
+  ```bash
+  gcloud compute instances stop dawsonhouse-wikibot --zone=us-west1-b
+  gcloud compute instances set-service-account dawsonhouse-wikibot --zone=us-west1-b --scopes=cloud-platform
+  gcloud compute instances start dawsonhouse-wikibot --zone=us-west1-b
+  ```
 - No firewall rules needed — the bot uses long-polling (outbound connections only to
   Telegram + Anthropic APIs), so nothing needs to accept inbound traffic besides the
   default SSH (which `gcloud compute ssh` handles automatically).
