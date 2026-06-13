@@ -1,31 +1,32 @@
 # Ingestion Manifest
 
-Last updated: 2026-06-07
+Last updated: 2026-06-13
 
 ## Google Drive folders
 
 | Folder | ID | Status |
 |--------|----|--------|
 | 10. House Purchase | `13Ru3AGOD4i_UxIjDdvAtPnNCDMIqQHHE` | Identified (out of scope — not pulled) |
-| 04 Renovation | `1cwShI6hqhG29f_zFnjZHHtSZnqrK6-yM` | **Pulled** (entire tree walked & content extracted) |
-| 04 Renovation / 0 Archive | `1jcVhZckoY_G1CLpXNV6itF3fcUiBSNnr` | Pulled |
+| 04 Renovation | `1cwShI6hqhG29f_zFnjZHHtSZnqrK6-yM` | **Pulled** (entire tree walked & content extracted); re-checked 2026-06-13, 1 file changed |
+| 04 Renovation / 0 Archive | `1jcVhZckoY_G1CLpXNV6itF3fcUiBSNnr` | Pulled; re-checked 2026-06-13, no changes |
 | 04 Renovation / 0 Archive / 01. By Luvina | `1X0gDPx3clK8SUxl_HAbWSiCRn7hYAT-8` | Explored — 9 photo-only JPEGs, metadata-only (no extractable text) |
 | 04 Renovation / 0 Archive / 02. IDs Archive | *(parent ID not separately recorded — discovered & traversed via its 4 vendor subfolders below; all subfolders fully enumerated)* | Explored (vendor subfolders mapped & pulled) |
 | 04 Renovation / 0 Archive / 02. IDs Archive / 1. Senso Studio | `1uKIlGE2L4pYzB5mc8AGKua9IARM38s5p` | Pulled (5/5 files) |
 | 04 Renovation / 0 Archive / 02. IDs Archive / 2. ZX / Kove Design | `1683GFqkDPsA8bvpm5R4dB_5WQ4DM5e2z` | Pulled (2/2 files) |
 | 04 Renovation / 0 Archive / 02. IDs Archive / 4. Reno Studio (The Good Rocket) | `1yZ8MQ41tAxpKU2DYj9bKjscCU3TAWrXX` | Pulled (1/1 file) |
 | 04 Renovation / 0 Archive / 02. IDs Archive / 5. Curated Co | `1KmRbo1did3YeylgPWovHtjM7NNEqEx9n` | Explored — empty folder, nothing to pull |
-| 04 Renovation / 01 Bud Studio | `1NAz0vf-3O-HuJfoIq83sZJk01l1bbl8b` | Pulled (subfolders walked) |
+| 04 Renovation / 01 Bud Studio | `1NAz0vf-3O-HuJfoIq83sZJk01l1bbl8b` | Pulled (subfolders walked); re-checked 2026-06-13, no changes |
 | 04 Renovation / 01 Bud Studio / 01 Archive | `16SVXW6p3FP7_eDuYI3-BuVV39lS7r4Ob` | Pulled (2/2 files) |
 | 04 Renovation / 01 Bud Studio / 02 Signed Documents | `1ktjpRERCHkBMcTbDAcc7DN-yLsf7a-pr` | Pulled (2/2 files) |
 | 04 Renovation / 01 Bud Studio / 03 Payments | `1GxhUGG4BJkw8bG5szNn549B_vLRYEgqE` | Pulled (2/2 files) |
 | 04 Renovation / 01 Bud Studio / 04 Render Design | `1f0PYn98QEqUmQ4sZYhmFyICmXKmT5stS` | Pulled (2/2 files) |
-| 04 Renovation / 02 Furnitures | `1wcva6H89tR3fXocLRpwSZSqP-pkq5EYc` | Pulled (subfolders walked) |
+| 04 Renovation / 02 Furnitures | `1wcva6H89tR3fXocLRpwSZSqP-pkq5EYc` | Pulled (subfolders walked); re-checked 2026-06-13 — **NEW subfolder found: 06 Kave** |
 | 04 Renovation / 02 Furnitures / 01 Dining Table | `1dOADj19_f0R3YCpCJ0g5400k3L28jlc_` | Pulled (1/1 file) |
 | 04 Renovation / 02 Furnitures / 02 Bed Frame + Mattress | `1E8Cn2uwGGjj2WSldhcB-vCzsF75NF6zI` | Pulled (1/1 file — photo-only, metadata recorded) |
 | 04 Renovation / 02 Furnitures / 03 Fridge, Washer, Microwave | `1Vk08Xt4abS_ArULZxw33EwMRlZIDcFcg` | Pulled (2/2 files) |
 | 04 Renovation / 02 Furnitures / 04 TV | `1qalFYiverZxQnp8q38FnX5rcuusAoYGx` | Pulled (1/1 file) |
 | 04 Renovation / 02 Furnitures / 05 Aircon | `1gIWl_9AuZaaLLk1p3WgQGTSfwMAYj7BC` | Pulled (1/1 file) |
+| 04 Renovation / 02 Furnitures / 06 Kave (Study chair + table lamp) | `16zAXLs2xnZ_41ypRPwTGSu4nJ87K6K14` | **NEW (created 2026-06-12)** — Pulled (1/1 file) 2026-06-13 |
 
 **Scope note:** Per the strict ingestion brief, ONLY the "04 Renovation" tree (and its full
 descendant subfolder tree) was walked and pulled. "10. House Purchase" was left untouched
@@ -35,7 +36,7 @@ descendant subfolder tree) was walked and pulled. "10. House Purchase" was left 
 
 | File | Source ID | Pulled | Local path |
 |------|-----------|--------|------------|
-| 02 Reno Sheet x Bud Studio [External] | `1cFfCsIXtQXqY4kU2dRp13rjjI5XJjmovX8wiUKnvV78` | 2026-06-07 | `raw/sheets/reno-sheet-bud-studio-2026-06-07.md` |
+| 02 Reno Sheet x Bud Studio [External] | `1cFfCsIXtQXqY4kU2dRp13rjjI5XJjmovX8wiUKnvV78` | 2026-06-07, **re-pulled 2026-06-13** (Drive `modifiedTime` 2026-06-12) | `raw/sheets/reno-sheet-bud-studio-2026-06-07.md` (same file, updated with "Update 2026-06-13" section) |
 | 86 Dawson Road - Ownership Valuation | `1hYXyGA9EUXbc4fO8JFanUfK6-zxc5Q03NNCRBGItKDE` | 2026-06-07 | `raw/sheets/ownership-valuation-2026-06-07.md` |
 | claude_Marcella_Quotation_26R532 | `1nULbgkhTZkKi0MGkyYfzCMKTedhfLB19H7FFwg0HxtQ` | 2026-06-07 | `raw/sheets/claude-marcella-quotation-26r532-2026-06-07.md` |
 | 01 Floor plan - Dawson 05-03@141086.pdf | `10mFh8uI1siDVMx-Go0Ibxq-icDT61HRl` | 2026-06-07 | `raw/drive/floor-plan-dawson-05-03-2026-06-07.md` |
@@ -63,9 +64,16 @@ descendant subfolder tree) was walked and pulled. "10. House Purchase" was left 
 | Marcella_rev2 — Bud Studio Appendix A revision (27/3/26) | `18RzVMh7wmeIldZc0GlIy7oKzQqBNEwIl` | 2026-06-07 | `raw/drive/marcella-rev2-bud-studio-2026-06-07.md` |
 | 02 Reno Sheet.xlsm (binary — metadata only, not extractable) | `1u1VyORHiyh6bZEH2M-RMw5fzFmJbQTL-` | 2026-06-07 | `raw/drive/reno-sheet-xlsm-archive-2026-06-07.md` |
 | 01. By Luvina — 9 WhatsApp images (photo-only batch, metadata only) | folder `1X0gDPx3clK8SUxl_HAbWSiCRn7hYAT-8` | 2026-06-07 | `raw/drive/by-luvina-whatsapp-images-2026-06-07.md` |
+| Order - S04948.pdf — Kave Home (Einara chair + Malachi table lamp) | `1AEbfjP_RPVo9fN0QhzEg5ql24mLA2kk5` | 2026-06-13 | `raw/drive/kave-order-s04948-2026-06-13.md` |
 
-**Total: 27 snapshot rows covering 38 distinct Drive files** (some rows combine multiple
+**Total: 28 snapshot rows covering 39 distinct Drive files** (some rows combine multiple
 Drive files: namecards = 2 PDFs; By Luvina = 9 JPEGs listed in one metadata batch file).
+
+## Change-check log
+
+| Date | Result |
+|------|--------|
+| 2026-06-13 | Ran `/ingest` change-check against the full `04 Renovation` tree (re-listed top level + `0 Archive` + `01 Bud Studio` + `02 Furnitures` with `modifiedTime > 2026-06-07`). Found 2 changes: (1) `02 Reno Sheet x Bud Studio [External]` modified 2026-06-12 — re-pulled, see updated `raw/sheets/reno-sheet-bud-studio-2026-06-07.md`. (2) New subfolder `02 Furnitures / 06 Kave (Study chair + table lamp)` created 2026-06-12, containing `Order - S04948.pdf` — pulled to `raw/drive/kave-order-s04948-2026-06-13.md`. All other subfolders unchanged. |
 
 ## Key Drive files (not yet pulled)
 

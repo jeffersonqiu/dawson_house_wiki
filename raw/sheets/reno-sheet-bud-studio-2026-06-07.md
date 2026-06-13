@@ -2,9 +2,55 @@
 
 **Source:** Google Drive → 04 Renovation  
 **File ID:** `1cFfCsIXtQXqY4kU2dRp13rjjI5XJjmovX8wiUKnvV78`  
-**Pulled:** 2026-06-07  
+**Pulled:** 2026-06-07 (re-pulled 2026-06-13 — see "Update 2026-06-13" section below for what changed)  
 **Owner:** mc.risye@gmail.com  
-**Last modified (Drive):** 2026-06-06  
+**Last modified (Drive):** 2026-06-12  
+
+---
+
+## Update 2026-06-13 — what changed since the 2026-06-07 pull
+
+Re-pulled after `/ingest` detected `modifiedTime` 2026-06-12 (vs. prior pull 2026-06-06).
+Summary of differences in the "Furniture & Appliances" table (full updated table below in
+"Furniture & Appliances (current, as of 2026-06-12)"):
+
+- **Working / Vanity Desk (Master Bedroom)** — changed from "Interdesk Classic" W100xD60
+  **$399.00** to **"Adan 1.2M Electric Adjustable Table"** (Table Top 120x60cm, adjustable
+  H75-110cm) **$139.00**. Different product, lower price — likely a deliberate swap, not a
+  correction. **Needs confirmation** before updating `Working-Vanity Desk.md` (currently
+  documents the Interdesk Classic $399 + Kave Lexa chair $300 as "shortlisted").
+- **Working / Vanity Chair (Master Bedroom)** — changed from "Kave Lexa Swivel Chair" $300.00
+  to **"Kave Einara"** H84xW59xD60 **$275.40**, now marked **Confirmed** with a link to the new
+  Kave order PDF (`raw/drive/kave-order-s04948-2026-06-13.md`, Order # S04948, 12/06/2026).
+- **Table Lamp (Living/Dining)** — consolidated from TWO rows (Kave Malachi $224.00 + Kave
+  Nuvira $236.00) down to ONE row: **Kave Malachi** H22xW20xD20 **$190.40**, now marked
+  **Confirmed**, same Kave order PDF. The Nuvira lamp appears to have been dropped.
+- **NEW row: Smart Lock (Living/Dining)** — Best D Digital Door Lock BDL-5000, $388.00, qty 1.
+- **NEW placeholder rows** (all $0.00, no product chosen yet): Ceiling Lamp, Carpet, Night
+  Curtain (Living/Dining); Dryer Rack, Robot Vacuum, Automated Drying Rack (Kitchen); Bedside
+  Table (x2), Bedside Lamp, Carpet, TV 65" (Master Bedroom); Queen Size Mattress, Study desk,
+  Study chair, Night Curtain (Guest/Common Bedroom); Sink/WC/Faucet (Master Bathroom and Common
+  Bathroom, x3 each).
+- **Aircon row clarified** — now explicitly "2x LG System 2 Aircon - 1 unit for living room - 1
+  unit for bedroom 2 - 2 units for master bedroom", still $4,973.00 total, still Confirmed.
+  Matches what's already documented in `Rooms/Whole House/Aircon.md`.
+- **TOTAL changed**: 30 items / $18,776.29 → **32 items / $19,757.09** (driven mainly by the new
+  Smart Lock row and the net effect of the desk/chair/lamp changes).
+- **Contract sum, summary breakdown (A-L), exclusions, and payment milestones are UNCHANGED**
+  from the 2026-06-07 pull — still $72,805.00 contract sum, same milestone table, same "Paid 8
+  Apr" deposit status. Several line items in the "Detailed Line Items" section gained a
+  "Section Total" figure in their row (e.g. row B item 1 now shows "$6,235.00" in the Section
+  Total column where it was blank before) — these are **the same totals as the header summary
+  table**, just newly populated in that column; no value changes.
+
+**Compiler/Extractor follow-up needed:**
+1. The Working/Vanity Desk swap (Interdesk → Adan) is a price AND product change on an item
+   already compiled as "shortlisted" — this should go through Extractor → review queue →
+   Compiler update, not be silently merged.
+2. The Working/Vanity Chair and Table Lamp items are now "Confirmed" with a corroborating paid
+   order (Kave S04948) — likely ready to move from "shortlisted" to "ordered" once extracted.
+3. New placeholder ($0.00) rows are NOT yet real items per `note-creation.md` — do not create
+   notes for them; they're useful as a "known gaps" list for future tracking.
 
 ---
 
@@ -126,7 +172,7 @@
 
 ---
 
-## Furniture & Appliances
+## Furniture & Appliances (as pulled 2026-06-07 — SUPERSEDED, kept for audit trail)
 
 | Item | Area | Brand and Model No. | Dimensions | @ Price | Qty | Total Price | Notes |
 | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -157,6 +203,73 @@
 | Day Curtain | All rooms | LACE CURTAIN RL040 | 100X198X2 | $43.90 | 6 | $263.40 |  |
 | Aircon | All rooms | LG System 2 Aircon Alpha |  | $4,973.00 | 1 | $4,973.00 | Confirmed |
 | TOTAL |  |  |  |  | 30 | $18,776.29 |  |
+
+---
+
+## Furniture & Appliances (current, as of 2026-06-12 — AUTHORITATIVE)
+
+| Item | Area | Brand and Model No. | Dimensions | @ Price | Qty | Total Price | Notes |
+| :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| Dining Table | Living/Dining | Custom | H75 x W180 x D90 | $1,450.00 | 1 | $1,450.00 | Confirmed |
+| Dining Chair | Living/Dining | EMILIE Modern Solid Wood Dining Chair | H45.8 x W50 x L50 | $329.00 | 3 | $987.00 |  |
+| TV | Living/Dining | 65" The Frame LS03HE 4K Samsung Vision AI Smart TV (2026) | 65" | $3,199.00 | 1 | $3,199.00 | Confirmed |
+| Sound Bar | Living/Dining | Sonos Beam Gen 2 Dolby Atmos Wireless Speaker | H6.9 x W65.1 x D10 | $899.00 | 1 | $899.00 |  |
+| Ceiling Lamp | Living/Dining |  |  |  |  | $0.00 |  |
+| Table Lamp | Living/Dining | Kave - Malachi | H22 x W20 x D20 | $190.40 | 1 | $190.40 | Confirmed (Kave order S04948) |
+| TV Console | Living/Dining | IKEA EKET Cabinet w door and 1 shelf, brown walnut effect, 35x35x70cm | H70 x W35 x D35 | $85.00 | 2 | $170.00 |  |
+| TV Console | Living/Dining | IKEA EKET Cabinet, brown walnut effect, 35x25x35cm | H35 x W35 x D25 | $30.00 | 3 | $90.00 |  |
+| Carpet | Living/Dining | IKEA STARREKLINTE Rug, flatwoven, natural/black, 120x180cm | L180 x W120 |  |  | $0.00 |  |
+| Night Curtain | Living/Dining |  |  |  |  | $0.00 |  |
+| Coffee Machine | Living/Dining | Nespresso Creatista Plus | H30.9 x W17 x D40.9 | $899.00 | 1 | $899.00 |  |
+| Wall Art | Living/Dining |  |  |  |  | $0.00 |  |
+| Smart Lock | Living/Dining | Best D Digital Door Lock BDL-5000 |  | $388.00 | 1 | $388.00 | **NEW row 2026-06-12** |
+| Ceiling Fan | Kitchen | Bestar Duo-MW/WD 16" DC Fan (White Case + Wood Blade) | 16" | $168.00 | 1 | $168.00 |  |
+| Airfryer | Kitchen | PHILIPS NA462/79 4000 SERIES DUAL STACK AIR FRYER (10L) | L46.9 x W23.3 x D39.9 | $299.00 | 1 | $299.00 |  |
+| Washer/Dryer | Kitchen | SHARP WASHER/DRYER-12.5/8KG ES-FW12D8PAS | W59.8 x H85.0 x D64.0cm | $1,577.94 | 1 | $1,577.94 | Confirmed |
+| Fridge | Kitchen | Samsung 655L Side-By-Side Refrigerator RS70F65Q3TSS | W91.2 x H178.0 x D71.6cm | $1,501.13 | 1 | $1,501.13 | Confirmed |
+| Microwave | Kitchen | SAMSUNG MICROWAVE OVEN 23L MS23DG4504AGSP | W48.9 x H27.5 x D37.7cm | $144.22 | 1 | $144.22 | Confirmed |
+| Oven | Kitchen | BOSCH BUILT IN OVEN-71L HHF113BR0B |  | $849.00 | 1 | $849.00 |  |
+| Hob | Kitchen | BOSCH INDUCTION HOB PUE611BB5J | W259.2 x H5.1 x D52.2 | $1,159.00 | 1 | $1,159.00 |  |
+| Hood | Kitchen | BOSCH DWBM98G50B CHIMNEY HOOD | H45-84 x W90 x D50.5 | $799.00 | 1 | $799.00 |  |
+| Sink | Kitchen | Zuhne Oslo 60cm Workstation Sink & Accessories (316 Stainless Steel, Natural + Honeycomb) | Exterior 600x510, Interior 560x470 (incl deck), 250 deep | $788.00 | 1 | $788.00 |  |
+| Kitchen Tap | Kitchen | GROHE Eurosmart Cosmopolitan Single-Lever Sink Mixer 1/2", Chrome | — | $499.00 | 1 | $499.00 |  |
+| Drinking Tap | Kitchen | RIGEL KITCHEN FAUCET W3-K-SA7003L | L18 x H36 | $99.00 | 1 | $99.00 |  |
+| Drinking Water Filter | Kitchen | 3M AP Easy Complete (Under-Sink) |  | $549.00 | 1 | $549.00 |  |
+| Dryer Rack | Kitchen |  |  |  |  | $0.00 |  |
+| Robot Vacuum | Kitchen |  |  |  |  | $0.00 |  |
+| Automated Drying Rack | Kitchen |  |  |  |  | $0.00 |  |
+| Night Curtain | Master Bedroom |  |  |  |  | $0.00 |  |
+| Bed Frame + Mattress | Master Bedroom | Dunlopillo King Size Storage Drawer Bed Frame | L190 x W183 x H30.5 | $2,039.00 | 1 | $2,039.00 |  |
+| Bedside Table | Master Bedroom |  |  |  | 2 | $0.00 |  |
+| Bedside Lamp | Master Bedroom |  |  |  |  | $0.00 |  |
+| Carpet | Master Bedroom |  |  |  |  | $0.00 |  |
+| TV | Master Bedroom |  | 65" |  |  | $0.00 |  |
+| Working / Vanity Desk | Master Bedroom | **Adan 1.2M Electric Adjustable Table** | Table top 120x60cm; legs adjustable H75-110cm | **$139.00** | 1 | $139.00 | **CHANGED 2026-06-12 — was "Interdesk Classic" W100xD60 $399.00** |
+| Working / Vanity Chair | Master Bedroom | **Kave Einara** | H84 x W59 x D60 | **$275.40** | 1 | $275.40 | **CHANGED 2026-06-12 — was "Kave Lexa Swivel Chair" $300.00. Now Confirmed (Kave order S04948)** |
+| Wall Art | Master Bedroom |  |  |  |  | $0.00 |  |
+| Wall Art Lamp | Master Bedroom |  |  |  |  | $0.00 |  |
+| Murphy Bedframe | Guest Bedroom | Alegra Vertical Murphy Bed (Natural) - Queen |  | $1,899.00 |  | $0.00 |  |
+| Queen Size Mattress | Guest Bedroom | Downtime Mattress - Queen | W152 x D190 x H20.5 |  |  | $0.00 |  |
+| Study desk | Guest Bedroom | Interdesk Classic | W160 x D70 |  |  |  |  |
+| Study chair | Guest Bedroom |  |  |  |  |  |  |
+| Night Curtain | Guest Bedroom |  |  |  |  | $0.00 |  |
+| Ironing Set | Guest Bedroom | PHILIPS AIS8540/80 ALL-IN-ONE 8500 SERIES | W39.2 x H60.2 x D597 | $599.00 | 1 | $599.00 | **price changed from $739.00 → $599.00** |
+| Sink | Master Bathroom |  |  |  |  | $0.00 |  |
+| WC | Master Bathroom |  |  |  |  | $0.00 |  |
+| Faucet | Master Bathroom |  |  |  |  | $0.00 |  |
+| Sink | Common Bathroom |  |  |  |  | $0.00 |  |
+| WC | Common Bathroom |  |  |  |  | $0.00 |  |
+| Faucet | Common Bathroom |  |  |  |  | $0.00 |  |
+| Day Curtain | All rooms where applicable | LACE CURTAIN RL040 | 100X198X2 | $43.90 | 6 | $263.40 |  |
+| Aircon | All rooms where applicable | 2x LG System 2 Aircon — 1 unit living room, 1 unit bedroom 2, 2 units master bedroom |  | $4,973.00 | 1 | $4,973.00 | Confirmed |
+| TOTAL |  |  |  |  | 32 | $19,757.09 |  |
+
+**Additional discrepancy noted (beyond the 2026-06-12 diff):** the Ironing Set price in this
+current pull reads **$599.00**, vs. **$739.00** in both the 2026-06-07 pull and the compiled
+`Rooms/Common Bedroom/Ironing Set.md`. Not flagged as part of the "NEWLY EDITED"/2026-06-12
+change markers, so unclear if this is a genuine recent edit or an OCR/read difference between
+pulls — flag for Extractor to reconcile against the product listing (Philips AIS8540/80 retail
+price).
 
 ---
 
