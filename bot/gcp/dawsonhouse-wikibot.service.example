@@ -5,6 +5,10 @@ Wants=network-online.target
 
 [Service]
 Type=simple
+# Run as the deploying user (not root), so systemd sets $HOME correctly
+# (run.sh needs it to find uv in ~/.local/bin) and file ownership matches
+# the user's git clone / cron sync job.
+User=REPLACE_WITH_USER
 # Replace with the absolute path to the cloned repo on the VM, e.g.
 # /home/jeffersonqiu/dawson_house_wiki
 WorkingDirectory=REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT/bot
@@ -29,8 +33,9 @@ WantedBy=multi-user.target
 # --- SETUP ---
 # 1. Copy this file to /etc/systemd/system/dawsonhouse-wikibot.service
 #    sudo cp dawsonhouse-wikibot.service /etc/systemd/system/
-# 2. Replace REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT with the real path (both lines above)
-#    sudo sed -i 's#REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT#/home/YOUR_USER/dawson_house_wiki#g' /etc/systemd/system/dawsonhouse-wikibot.service
+# 2. Replace REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT and REPLACE_WITH_USER with real values
+#    sudo sed -i -e 's#REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT#/home/YOUR_USER/dawson_house_wiki#g' \
+#                 -e 's#REPLACE_WITH_USER#YOUR_USER#g' /etc/systemd/system/dawsonhouse-wikibot.service
 # 3. Reload systemd, enable on boot, start now:
 #    sudo systemctl daemon-reload
 #    sudo systemctl enable --now dawsonhouse-wikibot

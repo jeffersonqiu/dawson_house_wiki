@@ -79,6 +79,7 @@ SERVICE_SRC="bot/gcp/dawsonhouse-wikibot.service.example"
 SERVICE_DST="/etc/systemd/system/${SERVICE_NAME}.service"
 sed -e "s#REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT#${REPO_DIR}#g" \
     -e "s#REPLACE_WITH_GCP_PROJECT_ID#${PROJECT_ID}#g" \
+    -e "s#REPLACE_WITH_USER#$(whoami)#g" \
     "$SERVICE_SRC" | sudo tee "$SERVICE_DST" > /dev/null
 sudo systemctl daemon-reload
 sudo systemctl enable "$SERVICE_NAME"
