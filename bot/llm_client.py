@@ -8,9 +8,10 @@ litellm picks the right SDK/endpoint from the prefix and reads the matching
 *_API_KEY env var (ANTHROPIC_API_KEY, OPENAI_API_KEY, ...) automatically, so
 switching models/providers is a config change only — no code changes.
 
-NOTE: the Research agent (research_agent.py) is NOT covered by this module —
-/research depends on Claude's server-side web_search tool and always talks to
-the Anthropic SDK directly, regardless of LLM_MODEL. See telegram_bot.py.
+NOTE: the Research agent (research_agent.py) has its own litellm-based
+tool-calling loop (RESEARCH_LLM_MODEL, default same as LLM_MODEL) and doesn't
+use chat_completion() here; telegram_bot.py uses provider_of()/
+api_key_env_var() from this module for both models' API-key checks.
 """
 
 from __future__ import annotations

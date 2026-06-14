@@ -8,15 +8,21 @@ Required environment variables (see bot/.env.example):
     TELEGRAM_ALLOWED_USER_IDS — comma-separated Telegram numeric user IDs allowed to chat
     LLM_MODEL                — optional, litellm "<provider>/<model>" string used by the
                                 Conversation agent AND (by default) /research
-                                (default: anthropic/<CLAUDE_MODEL>). Whichever
-                                *_API_KEY the provider needs (e.g. ANTHROPIC_API_KEY,
-                                OPENAI_API_KEY) must also be set.
+                                (default: openai/gpt-4o-mini, or anthropic/<CLAUDE_MODEL>
+                                if CLAUDE_MODEL is set and LLM_MODEL isn't). Whichever
+                                *_API_KEY the provider needs (e.g. OPENAI_API_KEY,
+                                ANTHROPIC_API_KEY) should also be set — but it's
+                                soft-required: if missing, the bot still starts, and
+                                chat/research just reply that they aren't configured
+                                yet (see _ensure_model_api_key).
     RESEARCH_LLM_MODEL       — optional, overrides the model used by /research only
                                 (default: same as LLM_MODEL).
-    CLAUDE_MODEL             — optional, legacy. Used as the default model for
-                                LLM_MODEL if LLM_MODEL is unset (default: claude-sonnet-4-6).
+    CLAUDE_MODEL             — optional, legacy. If set (and LLM_MODEL is unset),
+                                LLM_MODEL defaults to anthropic/<CLAUDE_MODEL> instead
+                                of openai/gpt-4o-mini.
     TAVILY_API_KEY           — required for /research's web_search tool
                                 (https://tavily.com), regardless of LLM_MODEL.
+                                Also soft-required, same as above.
 
 GCP Secret Manager (optional, used for deployment — see bot/gcp/):
     If GCP_PROJECT_ID is set and a required *_API_KEY / TELEGRAM_BOT_TOKEN is NOT
@@ -79,7 +85,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("dawson-wiki-bot")
 
-DEFAULT_CLAUDE_MODEL = "claude-sonnet-4-6"
+DEFAULT_LLM_MODEL = "openai/gpt-4o-mini"  # used if neither LLM_MODEL nor CLAUDE_MODEL is set
 MAX_HISTORY_TURNS = 12  # user+assistant pairs kept per chat, to bound context growth
 TELEGRAM_MAX_MESSAGE_LEN = 4096
 
@@ -122,6 +128,29 @@ def _config_value(name: str, project_id: str | None) -> str | None:
     return None
 
 
+def _ensure_model_api_key(model: str, project_id: str | None) -> str | None:
+    """Best-effort: ensure the *_API_KEY needed by `model` is in os.environ
+    (incl. Secret Manager fallback).
+
+    Soft-required, like TAVILY_API_KEY: returns the missing env var name if
+    it couldn't be found (so the bot still starts and chat/research can reply
+    "not configured yet" at runtime), or None if the key is present.
+    """
+    provider = llm_client.provider_of(model)
+    key_env_var = llm_client.api_key_env_var(provider)
+    api_key = _config_value(key_env_var, project_id)
+    if api_key:
+        os.environ[key_env_var] = api_key  # ensure litellm sees it (e.g. when from Secret Manager)
+        return None
+    logger.warning(
+        "%s is not set — model '%s' is unavailable until it's configured "
+        "(see bot/.env.example or bot/gcp/setup-secrets.sh).",
+        key_env_var,
+        model,
+    )
+    return key_env_var
+
+
 def _load_config() -> dict:
     load_dotenv()  # loads bot/.env if present, falls back to process env
 
@@ -132,25 +161,25 @@ def _load_config() -> dict:
         sys.exit("TELEGRAM_BOT_TOKEN is not set (see bot/.env.example or bot/gcp/setup-secrets.sh)")
 
     # LLM_MODEL is a litellm "<provider>/<model>" string, used by both the
-    # Conversation agent and (by default) /research. Default to Anthropic via
-    # the (legacy) CLAUDE_MODEL/default, so existing configs behave exactly as
-    # before unless LLM_MODEL is set.
-    claude_model = os.environ.get("CLAUDE_MODEL", DEFAULT_CLAUDE_MODEL)
-    llm_model = os.environ.get("LLM_MODEL", f"anthropic/{claude_model}")
+    # Conversation agent and (by default) /research. CLAUDE_MODEL is a legacy
+    # override (anthropic/<CLAUDE_MODEL>) for configs that predate LLM_MODEL;
+    # if neither is set, default to DEFAULT_LLM_MODEL.
+    if os.environ.get("LLM_MODEL"):
+        llm_model = os.environ["LLM_MODEL"]
+    elif os.environ.get("CLAUDE_MODEL"):
+        llm_model = f"anthropic/{os.environ['CLAUDE_MODEL']}"
+    else:
+        llm_model = DEFAULT_LLM_MODEL
     research_llm_model = os.environ.get("RESEARCH_LLM_MODEL", llm_model)
 
     # Ensure the right *_API_KEY is set (incl. Secret Manager fallback) for
-    # every provider in use across both models.
-    for model in {llm_model, research_llm_model}:
-        provider = llm_client.provider_of(model)
-        key_env_var = llm_client.api_key_env_var(provider)
-        api_key = _config_value(key_env_var, project_id)
-        if not api_key:
-            sys.exit(
-                f"{key_env_var} is not set, required for model {model} "
-                "(see bot/.env.example or bot/gcp/setup-secrets.sh)"
-            )
-        os.environ[key_env_var] = api_key  # ensure litellm sees it (e.g. when from Secret Manager)
+    # each model in use. Soft-required (see _ensure_model_api_key) — missing
+    # keys disable chat/research at runtime rather than crashing the bot.
+    missing_llm_key = _ensure_model_api_key(llm_model, project_id)
+    if research_llm_model == llm_model:
+        missing_research_key = missing_llm_key
+    else:
+        missing_research_key = _ensure_model_api_key(research_llm_model, project_id)
 
     # /research's web_search tool is backed by Tavily, independent of LLM_MODEL.
     # Soft-required: don't crash the whole bot if it's missing — /research
@@ -178,6 +207,8 @@ def _load_config() -> dict:
         "telegram_token": token,
         "llm_model": llm_model,
         "research_llm_model": research_llm_model,
+        "missing_llm_key": missing_llm_key,
+        "missing_research_key": missing_research_key,
         "allowed_user_ids": allowed_ids,
     }
 
@@ -242,6 +273,13 @@ async def research_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         )
         return
 
+    if CONFIG["missing_research_key"]:
+        await message.reply_text(
+            f"/research isn't configured yet — {CONFIG['missing_research_key']} is "
+            f"missing for model {CONFIG['research_llm_model']}. Ask the owner to add it."
+        )
+        return
+
     # Everything after "/research" (and an optional "@botname")
     query = re.sub(r"^/research(@\w+)?\s*", "", message.text or "", count=1).strip()
     if not query:
@@ -294,6 +332,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     if not user_text:
         return
 
+    if CONFIG["missing_llm_key"]:
+        await message.reply_text(
+            f"Chat isn't configured yet — {CONFIG['missing_llm_key']} is missing "
+            f"for model {CONFIG['llm_model']}. Ask the owner to add it."
+        )
+        return
+
     history = conversation_history.setdefault(chat_id, [])
     history.append({"role": "user", "content": user_text})
     # bound history length (keep most recent N turns = 2*N messages)
@@ -339,9 +384,11 @@ def main() -> None:
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     logger.info(
-        "Starting Dawson House Wiki Telegram bot (llm_model=%s, research_llm_model=%s, allowed_users=%s)",
+        "Starting Dawson House Wiki Telegram bot (llm_model=%s%s, research_llm_model=%s%s, allowed_users=%s)",
         CONFIG["llm_model"],
+        " [NOT CONFIGURED]" if CONFIG["missing_llm_key"] else "",
         CONFIG["research_llm_model"],
+        " [NOT CONFIGURED]" if CONFIG["missing_research_key"] else "",
         sorted(CONFIG["allowed_user_ids"]) or "NONE",
     )
     app.run_polling(allowed_updates=Update.ALL_TYPES)
