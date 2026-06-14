@@ -6,24 +6,38 @@ Run modes:
 Required environment variables (see bot/.env.example):
     TELEGRAM_BOT_TOKEN       — from @BotFather
     TELEGRAM_ALLOWED_USER_IDS — comma-separated Telegram numeric user IDs allowed to chat
-    ANTHROPIC_API_KEY        — Claude API key
-    CLAUDE_MODEL             — optional, defaults to claude-sonnet-4-6
+    LLM_MODEL                — optional, litellm "<provider>/<model>" string for the
+                                Conversation agent (default: anthropic/claude-sonnet-4-6).
+                                Whichever *_API_KEY the provider needs (e.g.
+                                ANTHROPIC_API_KEY, OPENAI_API_KEY) must also be set.
+    ANTHROPIC_API_KEY        — required regardless of LLM_MODEL: /research's
+                                web_search tool always uses Claude directly.
+    CLAUDE_MODEL             — optional, legacy. Used as the /research model
+                                (default: claude-sonnet-4-6), and as the default
+                                provider/model for LLM_MODEL if LLM_MODEL is unset.
 
 GCP Secret Manager (optional, used for deployment — see bot/gcp/):
-    If GCP_PROJECT_ID is set and TELEGRAM_BOT_TOKEN / ANTHROPIC_API_KEY are NOT
-    present in the environment, they're fetched from Secret Manager (secret ID
-    == variable name, "latest" version) using the host's Application Default
-    Credentials. Locally this is never triggered — bot/.env supplies both
-    values directly. See bot/gcp/setup-secrets.sh.
+    If GCP_PROJECT_ID is set and a required *_API_KEY / TELEGRAM_BOT_TOKEN is NOT
+    present in the environment, it's fetched from Secret Manager (secret ID ==
+    variable name, "latest" version) using the host's Application Default
+    Credentials. Locally this is never triggered — bot/.env supplies values
+    directly. See bot/gcp/setup-secrets.sh.
 
 Design notes:
     - Read-only Conversation agent: answers questions from the compiled wiki
       (Dawson's wiki/wiki/**). Never writes to the wiki directly (per
       system/agents/conversation.md and write-safety.md).
+    - The Conversation agent's model/provider is swappable via LLM_MODEL
+      (see llm_client.py, backed by litellm) — e.g. set
+      LLM_MODEL=openai/gpt-4o-mini + OPENAI_API_KEY to use ChatGPT instead of
+      Claude for everyday chat. /research is unaffected (see below).
     - /research is a separate, narrowly-scoped Research agent (research_agent.py)
       that DOES write to the wiki — but only new notes under
       Dawson's wiki/wiki/Research/**, never Rooms/Vendors/Tasks/Decisions (see
-      system/agents/research.md and write-safety.md).
+      system/agents/research.md and write-safety.md). It always uses the
+      Anthropic SDK directly because it depends on Claude's server-side
+      web_search tool, which has no equivalent in this codebase for other
+      providers.
     - Wiki content is loaded fresh on every message (cheap — small vault) so
       edits made via the Compiler are reflected immediately without restarting
       the bot. Use /refresh to force-reload if you ever cache this.
@@ -54,6 +68,7 @@ from telegram.ext import (
     filters,
 )
 
+import llm_client
 import research_agent
 from wiki_context import build_system_prompt
 
@@ -63,7 +78,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("dawson-wiki-bot")
 
-DEFAULT_MODEL = "claude-sonnet-4-6"
+DEFAULT_RESEARCH_MODEL = "claude-sonnet-4-6"
 MAX_HISTORY_TURNS = 12  # user+assistant pairs kept per chat, to bound context growth
 TELEGRAM_MAX_MESSAGE_LEN = 4096
 
@@ -115,9 +130,35 @@ def _load_config() -> dict:
     if not token:
         sys.exit("TELEGRAM_BOT_TOKEN is not set (see bot/.env.example or bot/gcp/setup-secrets.sh)")
 
-    api_key = _config_value("ANTHROPIC_API_KEY", project_id)
-    if not api_key:
-        sys.exit("ANTHROPIC_API_KEY is not set (see bot/.env.example or bot/gcp/setup-secrets.sh)")
+    research_model = os.environ.get("CLAUDE_MODEL", DEFAULT_RESEARCH_MODEL)
+    # LLM_MODEL is a litellm "<provider>/<model>" string for the Conversation
+    # agent. Default to Anthropic via the (legacy) CLAUDE_MODEL/default, so
+    # existing configs behave exactly as before unless LLM_MODEL is set.
+    llm_model = os.environ.get("LLM_MODEL", f"anthropic/{research_model}")
+
+    provider = llm_client.provider_of(llm_model)
+    key_env_var = llm_client.api_key_env_var(provider)
+    chat_api_key = _config_value(key_env_var, project_id)
+    if not chat_api_key:
+        sys.exit(
+            f"{key_env_var} is not set, required for LLM_MODEL={llm_model} "
+            "(see bot/.env.example or bot/gcp/setup-secrets.sh)"
+        )
+    os.environ[key_env_var] = chat_api_key  # ensure litellm sees it (e.g. when from Secret Manager)
+
+    # /research always uses Claude's web_search tool directly, regardless of
+    # LLM_MODEL — so ANTHROPIC_API_KEY is required even if the Conversation
+    # agent has been switched to another provider.
+    if provider == "anthropic":
+        research_api_key = chat_api_key
+    else:
+        research_api_key = _config_value("ANTHROPIC_API_KEY", project_id)
+        if not research_api_key:
+            sys.exit(
+                "ANTHROPIC_API_KEY is not set — required for /research's web_search "
+                "tool even when LLM_MODEL uses another provider "
+                "(see bot/.env.example or bot/gcp/setup-secrets.sh)"
+            )
 
     allowed_raw = os.environ.get("TELEGRAM_ALLOWED_USER_IDS", "")
     allowed_ids = {
@@ -131,14 +172,15 @@ def _load_config() -> dict:
 
     return {
         "telegram_token": token,
-        "anthropic_api_key": api_key,
-        "model": os.environ.get("CLAUDE_MODEL", DEFAULT_MODEL),
+        "llm_model": llm_model,
+        "research_model": research_model,
+        "research_api_key": research_api_key,
         "allowed_user_ids": allowed_ids,
     }
 
 
 CONFIG = _load_config()
-CLAUDE = anthropic.Anthropic(api_key=CONFIG["anthropic_api_key"])
+RESEARCH_CLAUDE = anthropic.Anthropic(api_key=CONFIG["research_api_key"])
 
 
 def _is_allowed(user_id: int) -> bool:
@@ -206,7 +248,7 @@ async def research_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     await message.reply_text("Researching alternatives — this can take ~30-60s...")
 
     try:
-        result = research_agent.run_research(query, CONFIG["model"], CLAUDE)
+        result = research_agent.run_research(query, CONFIG["research_model"], RESEARCH_CLAUDE)
         path = research_agent.save_research_note(
             result["title"], result["room"], result["note_markdown"]
         )
@@ -253,19 +295,16 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
     try:
         system_prompt = build_system_prompt()
-        response = CLAUDE.messages.create(
-            model=CONFIG["model"],
-            max_tokens=1500,
+        reply_text = llm_client.chat_completion(
+            model=CONFIG["llm_model"],
             system=system_prompt,
             messages=history,
+            max_tokens=1500,
         )
-        reply_text = "".join(
-            block.text for block in response.content if block.type == "text"
-        ).strip()
     except Exception:  # noqa: BLE001 - want to report any failure to the user
-        logger.exception("Claude API call failed")
+        logger.exception("LLM call failed")
         await message.reply_text(
-            "Sorry, something went wrong talking to Claude. Please try again."
+            "Sorry, something went wrong talking to the AI model. Please try again."
         )
         # don't keep a broken turn in history
         history.pop()
@@ -291,8 +330,9 @@ def main() -> None:
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     logger.info(
-        "Starting Dawson House Wiki Telegram bot (model=%s, allowed_users=%s)",
-        CONFIG["model"],
+        "Starting Dawson House Wiki Telegram bot (llm_model=%s, research_model=%s, allowed_users=%s)",
+        CONFIG["llm_model"],
+        CONFIG["research_model"],
         sorted(CONFIG["allowed_user_ids"]) or "NONE",
     )
     app.run_polling(allowed_updates=Update.ALL_TYPES)

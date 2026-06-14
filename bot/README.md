@@ -51,6 +51,21 @@ CLAUDE_MODEL=claude-sonnet-4-6                  # optional, this is the default
 
 `bot/.env` is gitignored — never commit it.
 
+#### Optional: use ChatGPT (or another provider) for everyday chat
+
+Everyday chat (not `/research`) is routed through [litellm](https://docs.litellm.ai/),
+so the model/provider is a config change — no code changes. Set `LLM_MODEL` to a
+litellm `"<provider>/<model>"` string plus that provider's API key, e.g.:
+
+```env
+LLM_MODEL=openai/gpt-4o-mini
+OPENAI_API_KEY=sk-...
+```
+
+`ANTHROPIC_API_KEY` is still required either way — `/research`'s web search
+always uses Claude directly (see "How it works" below). If `LLM_MODEL` is
+unset, everyday chat defaults to `anthropic/<CLAUDE_MODEL>`, same as before.
+
 ### 5. Run it
 
 ```bash
@@ -325,8 +340,12 @@ the wiki itself.
   so this is simple and always up to date — no caching, no embeddings, no vector DB.
 - `telegram_bot.py` — long-polling Telegram bot (`python-telegram-bot`). Checks the
   sender's Telegram user ID against `TELEGRAM_ALLOWED_USER_IDS`, keeps a short
-  in-memory conversation history per chat (lost on restart), and calls the Anthropic
-  API (`anthropic` SDK) with the system prompt + history.
+  in-memory conversation history per chat (lost on restart), and calls the
+  Conversation agent's model via `llm_client.py` with the system prompt + history.
+- `llm_client.py` — thin [litellm](https://docs.litellm.ai/) wrapper used only by the
+  Conversation agent (everyday chat). `LLM_MODEL` (`"<provider>/<model>"`, default
+  `anthropic/<CLAUDE_MODEL>`) selects the model/provider; litellm reads the matching
+  `*_API_KEY` from the environment. `/research` is unaffected — see next.
 - `research_agent.py` — backs `/research`. One Anthropic API call with the
   `web_search_20250305` server tool does the searching and returns a full Markdown
   note + chat summary in one response; `telegram_bot.py` saves the note under
@@ -345,6 +364,10 @@ the wiki itself.
 - `/research` notes are not committed/pushed automatically — they show up as new files
   in `git status` on whichever machine runs the bot, for you to review and commit like
   any other change.
+- `/research` always uses Claude (`ANTHROPIC_API_KEY` + `CLAUDE_MODEL`) regardless of
+  `LLM_MODEL`, because it depends on Claude's server-side `web_search` tool. Switching
+  everyday chat to another provider via `LLM_MODEL` does not change `/research`'s cost
+  or model — and doesn't remove the need for a funded `ANTHROPIC_API_KEY`.
 - If the wiki grows much larger (hundreds of notes), the "load everything every time"
   approach in `wiki_context.py` will need to move to retrieval (embeddings/search)
   rather than full-context loading.
