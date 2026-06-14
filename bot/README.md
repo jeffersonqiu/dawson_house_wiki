@@ -1,9 +1,21 @@
-# Dawson House Wiki — Telegram Bot (Conversation agent)
+# Dawson House Wiki — Telegram Bots
 
-A personal Telegram bot that answers renovation questions from the compiled wiki
-(`Dawson's wiki/wiki/**`), acting as the **Conversation agent**
-(`system/agents/conversation.md`). Read-only — it cannot edit the wiki; for changes,
-use the `/extract` and `/compile` slash commands in a Claude Code session.
+Two personal Telegram bots, on separate bot tokens:
+
+- **`telegram_bot.py`** — the **Conversation agent**
+  (`system/agents/conversation.md`): answers renovation questions from the compiled
+  wiki (`Dawson's wiki/wiki/**`) and runs `/research`. Read-only over the wiki itself —
+  it cannot edit `Rooms`/`Vendors`/`Tasks`/`Decisions`; for changes, use the `/extract`
+  and `/compile` slash commands in a Claude Code session.
+- **`capture_bot.py`** — the **Capture agent** (`system/agents/capture.md`):
+  quick-capture via `/note` and photo messages, plus an end-of-day clarification
+  review. Appends to `Dawson's wiki/inbox/**` only.
+
+They're separate bots (separate `@BotFather` tokens) so that a photo sent to the
+Conversation bot for discussion (e.g. "why doesn't this match my spec?") is never
+mistaken for data to file away — only photos sent to the Capture bot get captured. Both
+share `TELEGRAM_ALLOWED_USER_IDS` and a few helper modules (`botconfig.py`,
+`llm_client.py`).
 
 **Why Telegram, not WhatsApp:** Telegram bots are free and set up in ~2 minutes with no
 business verification (just message @BotFather). WhatsApp Business API requires Meta
@@ -14,12 +26,18 @@ it for a personal assistant. See `system/agents/conversation.md` for more detail
 
 ## One-time setup
 
-### 1. Create the Telegram bot
+### 1. Create the Telegram bots
+
+You need **two** bots — one for chat/research, one for quick-capture:
 
 1. Open Telegram, search for **@BotFather**, start a chat.
 2. Send `/newbot`, follow the prompts (choose a name and a username ending in `bot`,
-   e.g. `DawsonHouseWikiBot`).
-3. BotFather replies with a token like `123456789:AAExampleTokenFromBotFather`. Copy it.
+   e.g. `DawsonHouseWikiBot`). BotFather replies with a token like
+   `123456789:AAExampleTokenFromBotFather` — this is `TELEGRAM_BOT_TOKEN`.
+3. Send `/newbot` **again** to create a second bot (e.g. `DawsonHouseCaptureBot`). Copy
+   its token too — this is `CAPTURE_BOT_TOKEN`.
+
+Both tokens go in `bot/.env` (Step 5).
 
 ### 2. Get your Telegram user ID
 
@@ -52,6 +70,9 @@ Edit `bot/.env`:
 
 ```env
 TELEGRAM_BOT_TOKEN=123456789:AAExampleTokenFromBotFather
+CAPTURE_BOT_TOKEN=123456789:AAAnotherExampleTokenFromBotFather
+CAPTURE_BOT_USERNAME=DawsonHouseCaptureBot       # optional — no "@"; used by the
+                                                  # Conversation bot's photo redirect
 TELEGRAM_ALLOWED_USER_IDS=111111111,222222222   # your ID, and Marcella's if desired
 ANTHROPIC_API_KEY=sk-ant-...
 CLAUDE_MODEL=claude-sonnet-4-6                  # optional, this is the default
@@ -88,14 +109,23 @@ independent of `LLM_MODEL`/`RESEARCH_LLM_MODEL`. If `LLM_MODEL` is unset, both d
 
 ### 6. Run it
 
+Each bot is a separate process. In one terminal:
+
 ```bash
 cd "dawson_house_wiki/bot"
-./run.sh
+./run.sh                 # telegram_bot.py — Conversation agent + /research
 ```
 
-First run creates a virtualenv (`bot/.venv`) and installs dependencies (takes ~30s),
-then starts long-polling. Leave this running, open Telegram, find your bot by its
-username, and send `/start`.
+In another terminal:
+
+```bash
+cd "dawson_house_wiki/bot"
+./run.sh capture_bot.py  # Capture agent — /note, photos, daily review
+```
+
+First run of each creates a shared virtualenv (`bot/.venv`) and installs dependencies
+(takes ~30s), then starts long-polling. Leave both running, open Telegram, find each
+bot by its username, and send `/start`.
 
 Stop with Ctrl-C.
 
@@ -103,15 +133,16 @@ Stop with Ctrl-C.
 
 ## Running it permanently (macOS, launchd)
 
-So the bot keeps running in the background (including after reboot/login), without
+So both bots keep running in the background (including after reboot/login), without
 keeping a terminal open:
 
 ```bash
 cd "dawson_house_wiki/bot"
 cp com.dawsonhouse.wikibot.plist.example ~/Library/LaunchAgents/com.dawsonhouse.wikibot.plist
+cp com.dawsonhouse.capturebot.plist.example ~/Library/LaunchAgents/com.dawsonhouse.capturebot.plist
 ```
 
-Edit `~/Library/LaunchAgents/com.dawsonhouse.wikibot.plist` and replace every
+Edit both files in `~/Library/LaunchAgents/` and replace every
 `REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT` with the absolute path to this repo, e.g.
 `/Users/jeffersonqiu/Desktop/projects/dawson_house_wiki`.
 
@@ -119,23 +150,21 @@ Then:
 
 ```bash
 launchctl load ~/Library/LaunchAgents/com.dawsonhouse.wikibot.plist
-launchctl list | grep dawsonhouse   # should show it running
+launchctl load ~/Library/LaunchAgents/com.dawsonhouse.capturebot.plist
+launchctl list | grep dawsonhouse   # should show both running
 ```
 
-Logs: `bot/logs/stdout.log` and `bot/logs/stderr.log`.
+Logs: `bot/logs/stdout.log` + `bot/logs/stderr.log` (Conversation bot) and
+`bot/logs/capture-stdout.log` + `bot/logs/capture-stderr.log` (Capture bot).
 
-To stop/disable:
+To stop/disable either:
 
 ```bash
 launchctl unload ~/Library/LaunchAgents/com.dawsonhouse.wikibot.plist
+launchctl unload ~/Library/LaunchAgents/com.dawsonhouse.capturebot.plist
 ```
 
-To restart after editing `telegram_bot.py` or `wiki_context.py`:
-
-```bash
-launchctl unload ~/Library/LaunchAgents/com.dawsonhouse.wikibot.plist
-launchctl load ~/Library/LaunchAgents/com.dawsonhouse.wikibot.plist
-```
+To restart after editing the bot code, unload then load the relevant plist(s) again.
 
 ---
 
@@ -146,17 +175,20 @@ regions runs the bot 24/7 for **$0/month** (within free-tier limits — see "Cos
 
 Deployment files for this live in `bot/gcp/`:
 - `setup-secrets.sh` — run on your Mac first (see Step 0.5); creates
-  `TELEGRAM_BOT_TOKEN` and `ANTHROPIC_API_KEY` as GCP Secret Manager secrets and
-  grants the VM's service account read access
-- `dawsonhouse-wikibot.service.example` — systemd unit (Linux equivalent of the launchd
-  plist above)
-- `setup-vm.sh` — one-time provisioning script you run on the VM
-- `sync-wiki.sh` — keeps the VM's copy of the repo in sync with GitHub (see "Keeping the
-  VM in sync" below)
+  `TELEGRAM_BOT_TOKEN`, `CAPTURE_BOT_TOKEN`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, and
+  `TAVILY_API_KEY` (whichever are set in your local `bot/.env`) as GCP Secret Manager
+  secrets and grants the VM's service account read access
+- `dawsonhouse-wikibot.service.example` — systemd unit for the Conversation bot (Linux
+  equivalent of the launchd plist above)
+- `dawsonhouse-capturebot.service.example` — systemd unit for the Capture bot
+- `setup-vm.sh` — one-time provisioning script you run on the VM; installs and enables
+  both services
+- `sync-wiki.sh` — keeps the VM's copy of the repo in sync with GitHub and restarts both
+  services if it changed (see "Keeping the VM in sync" below)
 
-**Secrets**: `TELEGRAM_BOT_TOKEN` and `ANTHROPIC_API_KEY` are stored in **GCP Secret
-Manager**, not in a plaintext `bot/.env` on the VM. The bot fetches them at startup via
-the VM's default service account (see `_secret_from_manager` in `telegram_bot.py`).
+**Secrets**: `TELEGRAM_BOT_TOKEN`, `CAPTURE_BOT_TOKEN`, and the `*_API_KEY`s are stored in
+**GCP Secret Manager**, not in a plaintext `bot/.env` on the VM. Both bots fetch them at
+startup via the VM's default service account (see `botconfig.py`).
 `TELEGRAM_ALLOWED_USER_IDS` (not a credential) still lives in `bot/.env` on the VM.
 
 ### Quick answers first
@@ -201,11 +233,12 @@ cd "dawson_house_wiki/bot/gcp"
 ./setup-secrets.sh
 ```
 
-This enables the Secret Manager API, creates `TELEGRAM_BOT_TOKEN` and `ANTHROPIC_API_KEY`
-as secrets from your local `bot/.env` values (without printing them), and grants the
-Compute Engine default service account `roles/secretmanager.secretAccessor` on both —
-so the VM can read them once it exists. Safe to re-run later (e.g. to rotate a key — it
-adds a new secret version).
+This enables the Secret Manager API, creates a secret for each of
+`TELEGRAM_BOT_TOKEN`, `CAPTURE_BOT_TOKEN`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, and
+`TAVILY_API_KEY` that's set in your local `bot/.env` (without printing them), and grants
+the Compute Engine default service account `roles/secretmanager.secretAccessor` on each
+— so the VM can read them once it exists. Safe to re-run later (e.g. to rotate a key —
+it adds a new secret version).
 
 ### Step 1 — Create the VM
 
@@ -260,9 +293,10 @@ chmod +x setup-vm.sh
 ```
 
 This installs git/python3/uv, clones the repo to `~/dawson_house_wiki`, creates
-`bot/.env` from the template, detects the GCP project ID and bakes it into the systemd
-unit as `GCP_PROJECT_ID` (so the Secret Manager fallback works), and installs+enables the
-service (but doesn't start it yet), plus the cron sync job.
+`bot/.env` from the template, detects the GCP project ID and bakes it into both systemd
+units as `GCP_PROJECT_ID` (so the Secret Manager fallback works), and installs+enables
+both services (`dawsonhouse-wikibot` and `dawsonhouse-capturebot`, but doesn't start
+them yet), plus the cron sync job.
 
 ### Step 3 — Configure `bot/.env` on the VM
 
@@ -270,34 +304,35 @@ service (but doesn't start it yet), plus the cron sync job.
 nano ~/dawson_house_wiki/bot/.env
 ```
 
-Set `TELEGRAM_ALLOWED_USER_IDS` to the same value as your local `bot/.env`. **Leave
-`TELEGRAM_BOT_TOKEN` and `ANTHROPIC_API_KEY` blank** — they're fetched from Secret Manager
-(Step 0.5) via the VM's service account.
+Set `TELEGRAM_ALLOWED_USER_IDS` (and `CAPTURE_BOT_USERNAME` if you want the Conversation
+bot's photo redirect to mention the Capture bot by name) to the same values as your local
+`bot/.env`. **Leave `TELEGRAM_BOT_TOKEN`, `CAPTURE_BOT_TOKEN`, and `ANTHROPIC_API_KEY`
+blank** — they're fetched from Secret Manager (Step 0.5) via the VM's service account.
 
-**Use the same Telegram bot token as your Mac, or a different one — just don't run both
+**Use the same Telegram bot tokens as your Mac, or different ones — just don't run both
 your Mac's bot and the VM's bot with the same token at the same time** (Telegram's
 long-polling API only allows one consumer per token; running two will cause "Conflict:
 terminated by other getUpdates request" errors). Once the VM version is working, stop the
-one on your Mac (`launchctl unload ...`).
+ones on your Mac (`launchctl unload ...`).
 
 ### Step 4 — Start and verify
 
 ```bash
-sudo systemctl start dawsonhouse-wikibot
-sudo systemctl status dawsonhouse-wikibot
-journalctl -u dawsonhouse-wikibot -f
+sudo systemctl start dawsonhouse-wikibot dawsonhouse-capturebot
+sudo systemctl status dawsonhouse-wikibot dawsonhouse-capturebot
+journalctl -u dawsonhouse-wikibot -u dawsonhouse-capturebot -f
 ```
 
-Message your bot on Telegram — it should respond. Ctrl-C out of `journalctl -f` once
-confirmed (the service keeps running).
+Message both bots on Telegram — each should respond. Ctrl-C out of `journalctl -f` once
+confirmed (the services keep running).
 
 ### Keeping the VM in sync with wiki updates
 
 After you run `/compile` locally and push to GitHub, the VM's cron job
 (`bot/gcp/sync-wiki.sh`, runs every 15 min) will:
 1. `git fetch` + fast-forward merge `origin/main`
-2. If the repo actually changed, `sudo systemctl restart dawsonhouse-wikibot` so the bot
-   reloads the updated wiki content
+2. If the repo actually changed, `sudo systemctl restart dawsonhouse-wikibot
+   dawsonhouse-capturebot` so both bots reload the updated wiki content/code
 
 Check sync logs: `tail -f ~/dawson_house_wiki/bot/logs/sync.log`
 
@@ -323,7 +358,9 @@ gcloud compute instances delete dawsonhouse-wikibot --zone=us-west1-b
 
 ## Usage
 
-In Telegram, message your bot directly (or in a group it's been added to, if you want
+### Conversation bot (`telegram_bot.py`)
+
+In Telegram, message this bot directly (or in a group it's been added to, if you want
 shared access with Marcella):
 
 - "What's the status of the kitchen appliances?"
@@ -344,22 +381,32 @@ Commands:
   this *does* write a new file to the wiki — but only a new note under `Research/`,
   never to `Rooms/`, `Vendors/`, `Tasks/`, or `04 Decisions.md`. See
   `system/agents/research.md`.
-- `/note <text>` — quick-capture something you noticed during the day (a price, a
-  vendor quote, an idea). Example: `/note Senso Studio quoted $4200 for kitchen
-  cabinets`. Appended to `Dawson's wiki/inbox/{date} telegram capture.md`.
-- Send a **photo** (with an optional caption) — also quick-captured: saved under
-  `Dawson's wiki/zz_images/` and linked from today's capture file via the caption (or
-  blank if none).
 
 If you ask it to change something ("mark the dining table as delivered", "update the
 ironing set price to $599"), it will explain what the change would be and that it needs
 to go through `/extract` → review → `/compile` in a Claude Code session — it won't edit
 the wiki itself.
 
-### End-of-day clarification review
+Sending a **photo** to this bot doesn't capture it — you'll get a message pointing you
+at the Capture bot instead, since a photo here is assumed to be part of the
+conversation (e.g. "why doesn't this match my spec?"), not data to file away.
+
+### Capture bot (`capture_bot.py`)
+
+Message this **separate** bot to quickly save things for later:
+
+- `/note <text>` — quick-capture something you noticed during the day (a price, a
+  vendor quote, an idea). Example: `/note Senso Studio quoted $4200 for kitchen
+  cabinets`. Appended to `Dawson's wiki/inbox/{date} telegram capture.md`.
+- Send a **photo** (with an optional caption) — saved under `Dawson's wiki/zz_images/`
+  and linked from today's capture file via the caption (or blank if none).
+- `/start` or `/help` — intro message
+- `/reset` — clear any in-progress end-of-day review
+
+#### End-of-day clarification review
 
 Once a day (`DAILY_REVIEW_HOUR`, default 21:00 in `WIKI_TZ`, default
-`Asia/Singapore`), if you captured anything via `/note` or a photo that day, the bot
+`Asia/Singapore`), if you captured anything via `/note` or a photo that day, this bot
 asks the configured LLM to find up to `DAILY_REVIEW_MAX_QUESTIONS` (default 3) points
 that are ambiguous — which room/vendor something relates to, whether a price is a quote
 or final, what's in a photo, etc. — including looking at any photos you sent.
@@ -374,14 +421,19 @@ silent. See `system/agents/capture.md`.
 
 ## How it works
 
+- `botconfig.py` — shared config/secret-loading helpers used by both bots:
+  `config_value`/`secret_from_manager` (env var, falling back to GCP Secret Manager),
+  `ensure_model_api_key` (soft-required `*_API_KEY` lookup), `load_allowed_user_ids`,
+  and `resolve_llm_model` (`LLM_MODEL` / legacy `CLAUDE_MODEL` / default).
 - `wiki_context.py` — on every message, reads every file under `Dawson's wiki/wiki/**`
   plus `system/agents/conversation.md` and `system/constitution/source-of-truth.md`,
   and assembles them into the system prompt. The wiki is small (~70KB as of June 2026)
   so this is simple and always up to date — no caching, no embeddings, no vector DB.
-- `telegram_bot.py` — long-polling Telegram bot (`python-telegram-bot`). Checks the
-  sender's Telegram user ID against `TELEGRAM_ALLOWED_USER_IDS`, keeps a short
-  in-memory conversation history per chat (lost on restart), and calls the
+- `telegram_bot.py` — the Conversation bot: long-polling (`python-telegram-bot`).
+  Checks the sender's Telegram user ID against `TELEGRAM_ALLOWED_USER_IDS`, keeps a
+  short in-memory conversation history per chat (lost on restart), and calls the
   Conversation agent's model via `llm_client.py` with the system prompt + history.
+  Photos are not captured here — the handler just points the user at the Capture bot.
 - `llm_client.py` — thin [litellm](https://docs.litellm.ai/) wrapper used by the
   Conversation agent (everyday chat). `LLM_MODEL` (`"<provider>/<model>"`, default
   `anthropic/<CLAUDE_MODEL>`) selects the model/provider; litellm reads the matching
@@ -392,15 +444,18 @@ silent. See `system/agents/capture.md`.
   API, `TAVILY_API_KEY`) up to 8 times, then writes a full Markdown note + chat summary
   in its final response; `telegram_bot.py` saves the note under
   `Dawson's wiki/wiki/Research/{Room}/`. See `system/agents/research.md`.
+- `capture_bot.py` — the Capture bot: a separate long-polling process on its own token
+  (`CAPTURE_BOT_TOKEN`). Handles `/note` and photo messages via `capture.py`, and
+  registers the daily review job from `daily_review.py`. See `system/agents/capture.md`.
 - `capture.py` — backs `/note` and photo messages: appends timestamped entries to
   `Dawson's wiki/inbox/{date} telegram capture.md` (Obsidian `![[filename]]` embeds for
   photos saved under `Dawson's wiki/zz_images/`).
-- `daily_review.py` — the end-of-day clarification review, registered as a
-  `JobQueue.run_daily()` job. Sends the day's capture file (text + any photos, as
-  vision content) to `LLM_MODEL`, which returns up to `DAILY_REVIEW_MAX_QUESTIONS`
-  multiple-choice questions as JSON; presents them via Telegram inline keyboards
-  (`CallbackQueryHandler`) and appends answers to the capture file under
-  `## Clarifications`. See `system/agents/capture.md`.
+- `daily_review.py` — the end-of-day clarification review, registered (by
+  `capture_bot.py`) as a `JobQueue.run_daily()` job. Sends the day's capture file (text
+  + any photos, as vision content) to `LLM_MODEL`, which returns up to
+  `DAILY_REVIEW_MAX_QUESTIONS` multiple-choice questions as JSON; presents them via
+  Telegram inline keyboards (`CallbackQueryHandler`) and appends answers to the capture
+  file under `## Clarifications`. See `system/agents/capture.md`.
 
 ## Known limitations / future ideas
 

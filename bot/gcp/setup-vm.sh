@@ -13,28 +13,33 @@
 #   4. Creates bot/.env from bot/.env.example (you must fill in real values
 #      afterwards — this script will NOT do that for you, and the file is
 #      gitignored so it stays local to the VM)
-#   5. Installs and enables the systemd service so the bot starts on boot
-#      and restarts on crash
+#   5. Installs and enables TWO systemd services — dawsonhouse-wikibot
+#      (Conversation agent + /research) and dawsonhouse-capturebot (Capture
+#      agent: /note, photos, daily review) — so both bots start on boot and
+#      restart on crash
 #   6. Installs a cron job that runs sync-wiki.sh every 15 minutes to keep
-#      the VM's repo copy up to date with origin/main
+#      the VM's repo copy up to date with origin/main (and restart both
+#      services if it changed)
 #
-# Secrets (TELEGRAM_BOT_TOKEN, ANTHROPIC_API_KEY): fetched from GCP Secret
-# Manager at runtime (see bot/gcp/setup-secrets.sh, run on your Mac first) —
-# this script wires up GCP_PROJECT_ID in the systemd unit so that works.
+# Secrets (TELEGRAM_BOT_TOKEN, CAPTURE_BOT_TOKEN, ANTHROPIC_API_KEY, etc.):
+# fetched from GCP Secret Manager at runtime (see bot/gcp/setup-secrets.sh,
+# run on your Mac first) — this script wires up GCP_PROJECT_ID in both
+# systemd units so that works.
 #
 # After running this script, you still need to:
 #   - Edit ~/dawson_house_wiki/bot/.env and set TELEGRAM_ALLOWED_USER_IDS
 #     (and CLAUDE_MODEL if you want a non-default model). Leave
-#     TELEGRAM_BOT_TOKEN / ANTHROPIC_API_KEY blank — they come from Secret
-#     Manager, assuming setup-secrets.sh has been run.
-#   - Run: sudo systemctl start dawsonhouse-wikibot
-#   - Test the bot on Telegram
+#     TELEGRAM_BOT_TOKEN / CAPTURE_BOT_TOKEN / ANTHROPIC_API_KEY blank — they
+#     come from Secret Manager, assuming setup-secrets.sh has been run.
+#   - Run: sudo systemctl start dawsonhouse-wikibot dawsonhouse-capturebot
+#   - Test both bots on Telegram
 
 set -euo pipefail
 
 REPO_URL="https://github.com/jeffersonqiu/dawson_house_wiki.git"
 REPO_DIR="$HOME/dawson_house_wiki"
 SERVICE_NAME="dawsonhouse-wikibot"
+CAPTURE_SERVICE_NAME="dawsonhouse-capturebot"
 
 echo "==> Installing system packages..."
 sudo apt-get update -y
@@ -63,7 +68,8 @@ echo "==> Setting up bot/.env..."
 if [ ! -f bot/.env ]; then
   cp bot/.env.example bot/.env
   echo "    Created bot/.env from template. Set TELEGRAM_ALLOWED_USER_IDS"
-  echo "    (TELEGRAM_BOT_TOKEN / ANTHROPIC_API_KEY come from Secret Manager — leave blank):"
+  echo "    (TELEGRAM_BOT_TOKEN / CAPTURE_BOT_TOKEN / ANTHROPIC_API_KEY etc."
+  echo "    come from Secret Manager — leave blank):"
   echo "    nano $REPO_DIR/bot/.env"
 else
   echo "    bot/.env already exists, leaving it alone."
@@ -74,18 +80,21 @@ PROJECT_ID="$(curl -s -H 'Metadata-Flavor: Google' \
   'http://metadata.google.internal/computeMetadata/v1/project/project-id')"
 echo "    Project: ${PROJECT_ID}"
 
-echo "==> Installing systemd service..."
-SERVICE_SRC="bot/gcp/dawsonhouse-wikibot.service.example"
-SERVICE_DST="/etc/systemd/system/${SERVICE_NAME}.service"
-sed -e "s#REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT#${REPO_DIR}#g" \
-    -e "s#REPLACE_WITH_GCP_PROJECT_ID#${PROJECT_ID}#g" \
-    -e "s#REPLACE_WITH_USER#$(whoami)#g" \
-    "$SERVICE_SRC" | sudo tee "$SERVICE_DST" > /dev/null
-sudo systemctl daemon-reload
-sudo systemctl enable "$SERVICE_NAME"
-echo "    Service installed and enabled (will start on boot)."
-echo "    NOT starting it yet — fill in bot/.env first, then run:"
-echo "      sudo systemctl start ${SERVICE_NAME}"
+echo "==> Installing systemd services..."
+for svc in "${SERVICE_NAME}:dawsonhouse-wikibot.service.example" "${CAPTURE_SERVICE_NAME}:dawsonhouse-capturebot.service.example"; do
+  svc_name="${svc%%:*}"
+  svc_src="bot/gcp/${svc#*:}"
+  svc_dst="/etc/systemd/system/${svc_name}.service"
+  sed -e "s#REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT#${REPO_DIR}#g" \
+      -e "s#REPLACE_WITH_GCP_PROJECT_ID#${PROJECT_ID}#g" \
+      -e "s#REPLACE_WITH_USER#$(whoami)#g" \
+      "$svc_src" | sudo tee "$svc_dst" > /dev/null
+  sudo systemctl daemon-reload
+  sudo systemctl enable "$svc_name"
+  echo "    ${svc_name} installed and enabled (will start on boot)."
+done
+echo "    NOT starting them yet — fill in bot/.env first, then run:"
+echo "      sudo systemctl start ${SERVICE_NAME} ${CAPTURE_SERVICE_NAME}"
 
 echo "==> Installing cron job for repo sync (every 15 minutes)..."
 chmod +x bot/gcp/sync-wiki.sh
@@ -96,14 +105,17 @@ printf '%s\n%s\n' "$EXISTING_CRON" "$CRON_LINE" | grep -v '^$' | crontab -
 echo "    Cron job installed."
 
 # sync-wiki.sh calls `sudo systemctl restart`, so allow this user to run that
-# one command without a password prompt (limits sudo scope to just this).
-SUDOERS_LINE="$(whoami) ALL=(ALL) NOPASSWD: /bin/systemctl restart ${SERVICE_NAME}"
-SUDOERS_FILE="/etc/sudoers.d/${SERVICE_NAME}-restart"
-if [ ! -f "$SUDOERS_FILE" ]; then
-  echo "$SUDOERS_LINE" | sudo tee "$SUDOERS_FILE" > /dev/null
-  sudo chmod 440 "$SUDOERS_FILE"
-  echo "    Granted passwordless 'systemctl restart ${SERVICE_NAME}' for cron sync."
-fi
+# one command without a password prompt for each service (limits sudo scope
+# to just these two commands).
+for svc_name in "$SERVICE_NAME" "$CAPTURE_SERVICE_NAME"; do
+  SUDOERS_LINE="$(whoami) ALL=(ALL) NOPASSWD: /bin/systemctl restart ${svc_name}"
+  SUDOERS_FILE="/etc/sudoers.d/${svc_name}-restart"
+  if [ ! -f "$SUDOERS_FILE" ]; then
+    echo "$SUDOERS_LINE" | sudo tee "$SUDOERS_FILE" > /dev/null
+    sudo chmod 440 "$SUDOERS_FILE"
+    echo "    Granted passwordless 'systemctl restart ${svc_name}' for cron sync."
+  fi
+done
 
 echo ""
 echo "==> Setup complete."
@@ -111,9 +123,9 @@ echo ""
 echo "Next steps:"
 echo "  1. Edit bot/.env with real credentials:"
 echo "       nano $REPO_DIR/bot/.env"
-echo "  2. Start the bot:"
-echo "       sudo systemctl start ${SERVICE_NAME}"
-echo "  3. Check it's running:"
-echo "       sudo systemctl status ${SERVICE_NAME}"
-echo "       journalctl -u ${SERVICE_NAME} -f"
-echo "  4. Message your bot on Telegram to confirm it responds."
+echo "  2. Start the bots:"
+echo "       sudo systemctl start ${SERVICE_NAME} ${CAPTURE_SERVICE_NAME}"
+echo "  3. Check they're running:"
+echo "       sudo systemctl status ${SERVICE_NAME} ${CAPTURE_SERVICE_NAME}"
+echo "       journalctl -u ${SERVICE_NAME} -u ${CAPTURE_SERVICE_NAME} -f"
+echo "  4. Message both bots on Telegram to confirm they respond."

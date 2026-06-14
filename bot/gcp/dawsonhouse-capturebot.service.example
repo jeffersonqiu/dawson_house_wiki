@@ -1,0 +1,47 @@
+[Unit]
+Description=Dawson House Wiki Telegram bot (Capture agent)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Run as the deploying user (not root), so systemd sets $HOME correctly
+# (run.sh needs it to find uv in ~/.local/bin) and file ownership matches
+# the user's git clone / cron sync job.
+User=REPLACE_WITH_USER
+# Replace with the absolute path to the cloned repo on the VM, e.g.
+# /home/jeffersonqiu/dawson_house_wiki
+WorkingDirectory=REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT/bot
+ExecStart=REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT/bot/run.sh capture_bot.py
+Restart=on-failure
+RestartSec=10
+
+# Enables the Secret Manager fallback in capture_bot.py: CAPTURE_BOT_TOKEN
+# and the configured LLM_MODEL's *_API_KEY are fetched from Secret Manager
+# (not bot/.env) using the VM's default service account. Run
+# bot/gcp/setup-secrets.sh (on your Mac) first to create the secrets and grant
+# access. setup-vm.sh fills this in.
+Environment=GCP_PROJECT_ID=REPLACE_WITH_GCP_PROJECT_ID
+
+# Hardening (optional but recommended — the bot only needs to read/write the
+# wiki's inbox + zz_images and reach the internet for Telegram + LLM APIs)
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+
+# --- SETUP ---
+# 1. Copy this file to /etc/systemd/system/dawsonhouse-capturebot.service
+#    sudo cp dawsonhouse-capturebot.service /etc/systemd/system/
+# 2. Replace REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT and REPLACE_WITH_USER with real values
+#    sudo sed -i -e 's#REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT#/home/YOUR_USER/dawson_house_wiki#g' \
+#                 -e 's#REPLACE_WITH_USER#YOUR_USER#g' /etc/systemd/system/dawsonhouse-capturebot.service
+# 3. Reload systemd, enable on boot, start now:
+#    sudo systemctl daemon-reload
+#    sudo systemctl enable --now dawsonhouse-capturebot
+# 4. Check status / logs:
+#    sudo systemctl status dawsonhouse-capturebot
+#    journalctl -u dawsonhouse-capturebot -f
+# 5. After a `git pull` to update the wiki or bot code, restart:
+#    sudo systemctl restart dawsonhouse-capturebot

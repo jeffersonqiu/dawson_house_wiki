@@ -14,7 +14,7 @@ Required environment variables (see bot/.env.example):
                                 ANTHROPIC_API_KEY) should also be set — but it's
                                 soft-required: if missing, the bot still starts, and
                                 chat/research just reply that they aren't configured
-                                yet (see _ensure_model_api_key).
+                                yet (see botconfig.ensure_model_api_key).
     RESEARCH_LLM_MODEL       — optional, overrides the model used by /research only
                                 (default: same as LLM_MODEL).
     CLAUDE_MODEL             — optional, legacy. If set (and LLM_MODEL is unset),
@@ -23,12 +23,8 @@ Required environment variables (see bot/.env.example):
     TAVILY_API_KEY           — required for /research's web_search tool
                                 (https://tavily.com), regardless of LLM_MODEL.
                                 Also soft-required, same as above.
-    DAILY_REVIEW_HOUR        — optional, hour (0-23, WIKI_TZ) at which the daily
-                                clarification review runs (default: 21, i.e. 9pm).
-    DAILY_REVIEW_MAX_QUESTIONS — optional, max clarifying questions asked per day
-                                (default: 3).
-    WIKI_TZ                  — optional, IANA timezone for /note timestamps and
-                                the daily review schedule (default: Asia/Singapore).
+    CAPTURE_BOT_USERNAME     — optional, the other bot's @username (no "@"), used
+                                only to point users at it if they send a photo here.
 
 GCP Secret Manager (optional, used for deployment — see bot/gcp/):
     If GCP_PROJECT_ID is set and a required *_API_KEY / TELEGRAM_BOT_TOKEN is NOT
@@ -60,18 +56,11 @@ Design notes:
     - Access is restricted to TELEGRAM_ALLOWED_USER_IDS — anyone else messaging
       the bot gets a polite refusal. This matters because the wiki contains
       personal financial/renovation data.
-    - /note <text> and photo messages are quick-capture: they append a
-      timestamped entry to Dawson's wiki/inbox/{date} telegram capture.md
-      (and save any photo under Dawson's wiki/zz_images/), via capture.py.
-      Same write-safety as the user's own manual inbox notes — never touches
-      the compiled wiki (see system/agents/capture.md).
-    - Once a day (DAILY_REVIEW_HOUR), daily_review.py asks the configured LLM
-      to find up to DAILY_REVIEW_MAX_QUESTIONS ambiguous points in that day's
-      capture file (incl. any photos, via vision) and asks the user via
-      Telegram inline-keyboard multiple choice. Answers are appended to the
-      capture file as a "## Clarifications" section for the Extractor to pick
-      up later. Soft-required like chat/research: silently skipped if the LLM
-      key isn't configured.
+    - This bot deliberately does NOT handle photos or /note — that's a
+      separate bot (capture_bot.py, see system/agents/capture.md) so that
+      photos sent here purely for discussion (e.g. "why doesn't this match my
+      spec?") are never mistaken for data to file away. Sending a photo here
+      just gets a pointer to the capture bot.
 """
 
 from __future__ import annotations
@@ -80,7 +69,6 @@ import logging
 import os
 import re
 import sys
-from datetime import time as dt_time
 
 from dotenv import load_dotenv
 
@@ -88,17 +76,15 @@ from telegram import Update
 from telegram.constants import ChatAction
 from telegram.ext import (
     Application,
-    CallbackQueryHandler,
     CommandHandler,
     ContextTypes,
     MessageHandler,
     filters,
 )
 
-import capture
-import daily_review
 import llm_client
 import research_agent
+from botconfig import config_value, ensure_model_api_key, load_allowed_user_ids, resolve_llm_model
 from wiki_context import build_system_prompt
 
 logging.basicConfig(
@@ -115,70 +101,12 @@ TELEGRAM_MAX_MESSAGE_LEN = 4096
 conversation_history: dict[int, list[dict[str, str]]] = {}
 
 
-def _secret_from_manager(project_id: str, secret_id: str) -> str | None:
-    """Fetch the latest version of `secret_id` from GCP Secret Manager.
-
-    Lazily imports google-cloud-secret-manager so local runs (which never set
-    GCP_PROJECT_ID) don't require the dependency to be installed.
-    """
-    try:
-        from google.cloud import secretmanager
-    except ImportError:
-        logger.error(
-            "GCP_PROJECT_ID is set but google-cloud-secret-manager isn't installed "
-            "(it's in requirements.txt — re-run bot/run.sh)."
-        )
-        return None
-
-    try:
-        client = secretmanager.SecretManagerServiceClient()
-        name = f"projects/{project_id}/secrets/{secret_id}/versions/latest"
-        response = client.access_secret_version(name=name)
-        return response.payload.data.decode("utf-8").strip()
-    except Exception:
-        logger.exception("Failed to fetch secret '%s' from Secret Manager", secret_id)
-        return None
-
-
-def _config_value(name: str, project_id: str | None) -> str | None:
-    """Env var (incl. bot/.env) first; GCP Secret Manager fallback if configured."""
-    value = os.environ.get(name)
-    if value:
-        return value
-    if project_id:
-        return _secret_from_manager(project_id, name)
-    return None
-
-
-def _ensure_model_api_key(model: str, project_id: str | None) -> str | None:
-    """Best-effort: ensure the *_API_KEY needed by `model` is in os.environ
-    (incl. Secret Manager fallback).
-
-    Soft-required, like TAVILY_API_KEY: returns the missing env var name if
-    it couldn't be found (so the bot still starts and chat/research can reply
-    "not configured yet" at runtime), or None if the key is present.
-    """
-    provider = llm_client.provider_of(model)
-    key_env_var = llm_client.api_key_env_var(provider)
-    api_key = _config_value(key_env_var, project_id)
-    if api_key:
-        os.environ[key_env_var] = api_key  # ensure litellm sees it (e.g. when from Secret Manager)
-        return None
-    logger.warning(
-        "%s is not set — model '%s' is unavailable until it's configured "
-        "(see bot/.env.example or bot/gcp/setup-secrets.sh).",
-        key_env_var,
-        model,
-    )
-    return key_env_var
-
-
 def _load_config() -> dict:
     load_dotenv()  # loads bot/.env if present, falls back to process env
 
     project_id = os.environ.get("GCP_PROJECT_ID")  # set on the GCP VM only
 
-    token = _config_value("TELEGRAM_BOT_TOKEN", project_id)
+    token = config_value("TELEGRAM_BOT_TOKEN", project_id)
     if not token:
         sys.exit("TELEGRAM_BOT_TOKEN is not set (see bot/.env.example or bot/gcp/setup-secrets.sh)")
 
@@ -186,27 +114,22 @@ def _load_config() -> dict:
     # Conversation agent and (by default) /research. CLAUDE_MODEL is a legacy
     # override (anthropic/<CLAUDE_MODEL>) for configs that predate LLM_MODEL;
     # if neither is set, default to DEFAULT_LLM_MODEL.
-    if os.environ.get("LLM_MODEL"):
-        llm_model = os.environ["LLM_MODEL"]
-    elif os.environ.get("CLAUDE_MODEL"):
-        llm_model = f"anthropic/{os.environ['CLAUDE_MODEL']}"
-    else:
-        llm_model = DEFAULT_LLM_MODEL
+    llm_model = resolve_llm_model(DEFAULT_LLM_MODEL)
     research_llm_model = os.environ.get("RESEARCH_LLM_MODEL", llm_model)
 
     # Ensure the right *_API_KEY is set (incl. Secret Manager fallback) for
-    # each model in use. Soft-required (see _ensure_model_api_key) — missing
-    # keys disable chat/research at runtime rather than crashing the bot.
-    missing_llm_key = _ensure_model_api_key(llm_model, project_id)
+    # each model in use. Soft-required (see botconfig.ensure_model_api_key) —
+    # missing keys disable chat/research at runtime rather than crashing the bot.
+    missing_llm_key = ensure_model_api_key(llm_model, project_id)
     if research_llm_model == llm_model:
         missing_research_key = missing_llm_key
     else:
-        missing_research_key = _ensure_model_api_key(research_llm_model, project_id)
+        missing_research_key = ensure_model_api_key(research_llm_model, project_id)
 
     # /research's web_search tool is backed by Tavily, independent of LLM_MODEL.
     # Soft-required: don't crash the whole bot if it's missing — /research
     # just replies that it isn't configured yet (see research_command).
-    tavily_key = _config_value("TAVILY_API_KEY", project_id)
+    tavily_key = config_value("TAVILY_API_KEY", project_id)
     if tavily_key:
         os.environ["TAVILY_API_KEY"] = tavily_key
     else:
@@ -215,18 +138,7 @@ def _load_config() -> dict:
             "configured (see bot/.env.example or bot/gcp/setup-secrets.sh)."
         )
 
-    allowed_raw = os.environ.get("TELEGRAM_ALLOWED_USER_IDS", "")
-    allowed_ids = {
-        int(x.strip()) for x in allowed_raw.split(",") if x.strip().isdigit()
-    }
-    if not allowed_ids:
-        logger.warning(
-            "TELEGRAM_ALLOWED_USER_IDS is empty — the bot will refuse ALL users. "
-            "Set it to your Telegram numeric user ID (get it from @userinfobot)."
-        )
-
-    daily_review_hour = int(os.environ.get("DAILY_REVIEW_HOUR", "21"))
-    daily_review_max_questions = int(os.environ.get("DAILY_REVIEW_MAX_QUESTIONS", "3"))
+    allowed_ids = load_allowed_user_ids()
 
     return {
         "telegram_token": token,
@@ -235,8 +147,7 @@ def _load_config() -> dict:
         "missing_llm_key": missing_llm_key,
         "missing_research_key": missing_research_key,
         "allowed_user_ids": allowed_ids,
-        "daily_review_hour": daily_review_hour,
-        "daily_review_max_questions": daily_review_max_questions,
+        "capture_bot_username": os.environ.get("CAPTURE_BOT_USERNAME", "").lstrip("@"),
     }
 
 
@@ -256,27 +167,26 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         )
         return
 
+    capture_hint = (
+        f"For quick-capture (saving notes/photos for later), message "
+        f"@{CONFIG['capture_bot_username']} instead.\n\n"
+        if CONFIG["capture_bot_username"]
+        else ""
+    )
+
     await update.message.reply_text(
         "Hi! I'm the Dawson House Wiki assistant.\n\n"
         "Ask me anything about the renovation — rooms, items, vendors, tasks, "
         "decisions, budget, statuses. I read from the compiled wiki and won't "
         "make changes myself; if you ask for an update, I'll explain what should "
         "go through the review queue + compile step.\n\n"
+        f"{capture_hint}"
         "Commands:\n"
-        "/note <text> — quick-capture a note for later (e.g. \"/note Senso "
-        "Studio quoted $4200 for kitchen cabinets\") — saved to today's inbox "
-        "capture file\n"
-        "Send a photo (with optional caption) — also quick-captured, saved "
-        "under zz_images/ and linked from today's capture file\n"
         "/research <description> — search the web for alternatives (e.g. "
         "\"/research extendable dining table, ~180x90cm, dark wood, under $1500 "
         "SGD, for the Living-Dining room\") and save a comparison note to the wiki\n"
         "/reset — clear this chat's conversation memory\n"
-        "/help — show this message again\n\n"
-        f"Each evening (around {CONFIG['daily_review_hour']:02d}:00 "
-        f"{capture.WIKI_TZ}), I'll ask up to "
-        f"{CONFIG['daily_review_max_questions']} quick multiple-choice questions "
-        "about anything unclear in that day's notes."
+        "/help — show this message again"
     )
 
 
@@ -289,54 +199,25 @@ async def reset_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     await update.message.reply_text("Conversation memory cleared.")
 
 
-async def note_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """This bot doesn't do quick-capture — point the user at the capture bot
+    instead of silently filing photos away (see system/agents/capture.md)."""
     user = update.effective_user
     message = update.message
     if not user or not message:
         return
 
     if not _is_allowed(user.id):
-        logger.warning("Rejected /note from unauthorized user_id=%s", user.id)
-        await message.reply_text(
-            "Sorry, this bot is private and not configured for your account."
+        return
+
+    if CONFIG["capture_bot_username"]:
+        text = (
+            f"I don't store photos — for quick-capture, send this to "
+            f"@{CONFIG['capture_bot_username']} instead."
         )
-        return
-
-    text = re.sub(r"^/note(@\w+)?\s*", "", message.text or "", count=1).strip()
-    if not text:
-        await message.reply_text(
-            "Usage: /note <text>\n\n"
-            "Example: /note Senso Studio quoted $4200 for kitchen cabinets"
-        )
-        return
-
-    path = capture.append_entry(text)
-    rel_path = path.relative_to(capture.REPO_ROOT)
-    await message.reply_text(f"Saved to {rel_path}")
-
-
-async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    user = update.effective_user
-    message = update.message
-    if not user or not message or not message.photo:
-        return
-
-    if not _is_allowed(user.id):
-        logger.warning("Rejected photo from unauthorized user_id=%s", user.id)
-        await message.reply_text(
-            "Sorry, this bot is private and not configured for your account."
-        )
-        return
-
-    capture.IMAGES_DIR.mkdir(parents=True, exist_ok=True)
-    filename = capture.save_photo_filename()
-    photo_file = await context.bot.get_file(message.photo[-1].file_id)
-    await photo_file.download_to_drive(custom_path=capture.IMAGES_DIR / filename)
-
-    caption = (message.caption or "").strip()
-    path = capture.append_entry(caption, image_filename=filename)
-    rel_path = path.relative_to(capture.REPO_ROOT)
-    await message.reply_text(f"Saved photo to {rel_path}")
+    else:
+        text = "I don't store photos — that's handled by the separate capture bot."
+    await message.reply_text(text)
 
 
 async def research_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -418,11 +299,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     if not user_text:
         return
 
-    # If a daily-review question is awaiting a free-text ("Other") answer,
-    # consume this message as that answer instead of normal chat.
-    if await daily_review.handle_free_text_answer(update, context):
-        return
-
     if CONFIG["missing_llm_key"]:
         await message.reply_text(
             f"Chat isn't configured yet — {CONFIG['missing_llm_key']} is missing "
@@ -472,43 +348,16 @@ def main() -> None:
     app.add_handler(CommandHandler("help", start_command))
     app.add_handler(CommandHandler("reset", reset_command))
     app.add_handler(CommandHandler("research", research_command))
-    app.add_handler(CommandHandler("note", note_command))
     app.add_handler(MessageHandler(filters.PHOTO, photo_handler))
-    app.add_handler(
-        CallbackQueryHandler(
-            daily_review.callback_handler,
-            pattern=rf"^{daily_review.CALLBACK_PREFIX}\|",
-        )
-    )
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    if app.job_queue is not None:
-        app.job_queue.run_daily(
-            daily_review.daily_review_job,
-            time=dt_time(hour=CONFIG["daily_review_hour"], minute=0, tzinfo=capture.WIKI_TZ),
-            data={
-                "llm_model": CONFIG["llm_model"],
-                "missing_llm_key": CONFIG["missing_llm_key"],
-                "max_questions": CONFIG["daily_review_max_questions"],
-                "allowed_user_ids": CONFIG["allowed_user_ids"],
-            },
-        )
-    else:
-        logger.warning(
-            "JobQueue is unavailable (install python-telegram-bot[job-queue]) — "
-            "the daily clarification review is disabled."
-        )
-
     logger.info(
-        "Starting Dawson House Wiki Telegram bot (llm_model=%s%s, research_llm_model=%s%s, "
-        "allowed_users=%s, daily_review=%02d:00 %s)",
+        "Starting Dawson House Wiki Telegram bot (llm_model=%s%s, research_llm_model=%s%s, allowed_users=%s)",
         CONFIG["llm_model"],
         " [NOT CONFIGURED]" if CONFIG["missing_llm_key"] else "",
         CONFIG["research_llm_model"],
         " [NOT CONFIGURED]" if CONFIG["missing_research_key"] else "",
         sorted(CONFIG["allowed_user_ids"]) or "NONE",
-        CONFIG["daily_review_hour"],
-        capture.WIKI_TZ,
     )
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 

@@ -1,7 +1,8 @@
 # Capture Agent
 
-**Status:** implemented (v1) — Telegram bot, `/note` command + photo messages,
-plus an end-of-day clarification review (`bot/telegram_bot.py` +
+**Status:** implemented (v1) — a SEPARATE Telegram bot from the Conversation
+agent, with its own bot token (`CAPTURE_BOT_TOKEN`), exposing `/note` + photo
+messages, plus an end-of-day clarification review (`bot/capture_bot.py` +
 `bot/capture.py` + `bot/daily_review.py`; see `bot/README.md`).
 
 ## Purpose
@@ -11,6 +12,17 @@ Let the user quickly drop raw notes and photos collected throughout the day
 inbox via Telegram, in the same format as the user's own manual inbox notes —
 then, once a day, ask up to a few short clarifying questions about anything
 ambiguous before the Extractor picks the day's notes up.
+
+## Why a separate bot
+
+This agent runs as its own Telegram bot, distinct from the Conversation agent
+(`bot/telegram_bot.py`, `system/agents/conversation.md`). A photo sent to the
+Conversation bot purely for discussion (e.g. "why doesn't this match my
+spec?") must never be mistaken for data to file away — and a single bot can't
+reliably distinguish those intents from a photo message alone. Splitting by
+bot makes the user's intent explicit: only photos/notes sent to the Capture
+bot are captured. Both bots share `TELEGRAM_ALLOWED_USER_IDS` and the
+underlying `capture.py`/`daily_review.py` modules.
 
 ## Inputs
 

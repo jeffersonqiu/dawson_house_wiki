@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Keeps the VM's clone of this repo in sync with origin/main, then restarts
-# the bot service if (and only if) anything actually changed.
+# both bot services (Conversation + Capture) if (and only if) anything
+# actually changed.
 #
 # Intended to run on a schedule via cron, e.g. every 15 minutes:
 #   */15 * * * * /home/YOUR_USER/dawson_house_wiki/bot/gcp/sync-wiki.sh >> /home/YOUR_USER/dawson_house_wiki/bot/logs/sync.log 2>&1
@@ -17,7 +18,7 @@
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-SERVICE_NAME="dawsonhouse-wikibot"
+SERVICE_NAMES=("dawsonhouse-wikibot" "dawsonhouse-capturebot")
 
 cd "$REPO_DIR"
 
@@ -33,8 +34,8 @@ git merge --ff-only origin/main
 AFTER="$(git rev-parse HEAD)"
 
 if [ "$BEFORE" != "$AFTER" ]; then
-  echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Updated $BEFORE -> $AFTER, restarting $SERVICE_NAME"
-  sudo systemctl restart "$SERVICE_NAME"
+  echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Updated $BEFORE -> $AFTER, restarting ${SERVICE_NAMES[*]}"
+  sudo systemctl restart "${SERVICE_NAMES[@]}"
 else
   echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] No changes."
 fi

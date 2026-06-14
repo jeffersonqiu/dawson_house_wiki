@@ -3,16 +3,17 @@
 #   gcloud auth login
 #   gcloud config set project <PROJECT_ID>
 #
-# Reads TELEGRAM_BOT_TOKEN and ANTHROPIC_API_KEY from your local bot/.env
-# (gitignored, never printed) and:
+# Reads credentials from your local bot/.env (gitignored, never printed) and,
+# for each one that's set:
 #   1. Enables the Secret Manager API
-#   2. Creates (or adds a new version to) two secrets with those values
+#   2. Creates (or adds a new version to) a secret with that value
 #   3. Grants the Compute Engine default service account read access, so the
-#      VM can fetch them at runtime via google-cloud-secret-manager
+#      VM can fetch it at runtime via google-cloud-secret-manager
 #
-# After this, the VM should NOT keep TELEGRAM_BOT_TOKEN / ANTHROPIC_API_KEY in
-# its own bot/.env — set GCP_PROJECT_ID in its environment instead (done by
-# setup-vm.sh) and the bot fetches both from Secret Manager automatically.
+# After this, the VM should NOT keep these values in its own bot/.env — set
+# GCP_PROJECT_ID in its environment instead (done by setup-vm.sh) and both
+# bots fetch them from Secret Manager automatically (see config_value in
+# botconfig.py).
 
 set -euo pipefail
 
@@ -34,14 +35,13 @@ echo "Using project: $PROJECT_ID"
 echo "==> Enabling Secret Manager API..."
 gcloud services enable secretmanager.googleapis.com
 
-# Load TELEGRAM_BOT_TOKEN / ANTHROPIC_API_KEY from bot/.env without echoing them
+# Load credentials from bot/.env without echoing them
 set -a
 # shellcheck disable=SC1090
 source "$ENV_FILE"
 set +a
 
 : "${TELEGRAM_BOT_TOKEN:?TELEGRAM_BOT_TOKEN not set in bot/.env}"
-: "${ANTHROPIC_API_KEY:?ANTHROPIC_API_KEY not set in bot/.env}"
 
 create_or_update_secret() {
   local secret_id="$1"
@@ -56,16 +56,29 @@ create_or_update_secret() {
   fi
 }
 
-echo "==> Creating/updating secrets..."
-create_or_update_secret "TELEGRAM_BOT_TOKEN" "$TELEGRAM_BOT_TOKEN"
-create_or_update_secret "ANTHROPIC_API_KEY" "$ANTHROPIC_API_KEY"
+# Credentials that may appear in bot/.env, each pushed as its own secret
+# (secret ID == env var name) if non-empty. Add new *_API_KEY vars here as
+# new providers/tools are supported.
+CANDIDATE_VARS=(TELEGRAM_BOT_TOKEN CAPTURE_BOT_TOKEN ANTHROPIC_API_KEY OPENAI_API_KEY TAVILY_API_KEY)
 
-echo "==> Granting the VM's default service account access to both secrets..."
+echo "==> Creating/updating secrets..."
+SECRETS_PUSHED=()
+for var in "${CANDIDATE_VARS[@]}"; do
+  value="${!var:-}"
+  if [ -n "$value" ]; then
+    create_or_update_secret "$var" "$value"
+    SECRETS_PUSHED+=("$var")
+  else
+    echo "    '$var' not set in bot/.env — skipping."
+  fi
+done
+
+echo "==> Granting the VM's default service account access to pushed secrets..."
 PROJECT_NUMBER="$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')"
 VM_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
 echo "    Service account: $VM_SA"
 
-for secret_id in TELEGRAM_BOT_TOKEN ANTHROPIC_API_KEY; do
+for secret_id in "${SECRETS_PUSHED[@]}"; do
   gcloud secrets add-iam-policy-binding "$secret_id" \
     --member="serviceAccount:${VM_SA}" \
     --role="roles/secretmanager.secretAccessor" \
@@ -75,8 +88,8 @@ done
 echo ""
 echo "==> Done."
 echo "Project:         $PROJECT_ID"
-echo "VM service acct: $VM_SA (now has secretAccessor on both secrets)"
+echo "VM service acct: $VM_SA (now has secretAccessor on: ${SECRETS_PUSHED[*]})"
 echo ""
-echo "On the VM: do NOT put TELEGRAM_BOT_TOKEN or ANTHROPIC_API_KEY in bot/.env."
+echo "On the VM: do NOT put these values in bot/.env."
 echo "setup-vm.sh sets GCP_PROJECT_ID=$PROJECT_ID in the systemd unit, which"
-echo "makes the bot fetch both secrets from Secret Manager automatically."
+echo "makes the bot fetch them from Secret Manager automatically."

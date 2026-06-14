@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  launchd job definition to keep the Dawson House Wiki Capture bot running
+  in the background on macOS, including across reboots/logins.
+
+  This is the SECOND bot (capture_bot.py — /note, photos, daily review),
+  separate from com.dawsonhouse.wikibot.plist.example (Conversation agent +
+  /research). Both can run at the same time, on different bot tokens.
+
+  SETUP:
+    1. Copy this file to ~/Library/LaunchAgents/com.dawsonhouse.capturebot.plist
+    2. Replace REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT below with the real
+       absolute path, e.g. /Users/jeffersonqiu/Desktop/projects/dawson_house_wiki
+    3. Load it:
+         launchctl load ~/Library/LaunchAgents/com.dawsonhouse.capturebot.plist
+    4. Check it's running:
+         launchctl list | grep dawsonhouse
+    5. Logs go to bot/logs/capture-stdout.log and bot/logs/capture-stderr.log
+
+  TO STOP / DISABLE:
+         launchctl unload ~/Library/LaunchAgents/com.dawsonhouse.capturebot.plist
+
+  TO RESTART AFTER A CODE CHANGE:
+         launchctl unload ~/Library/LaunchAgents/com.dawsonhouse.capturebot.plist
+         launchctl load ~/Library/LaunchAgents/com.dawsonhouse.capturebot.plist
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.dawsonhouse.capturebot</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT/bot/run.sh</string>
+        <string>capture_bot.py</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT/bot</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+        <key>Crashed</key>
+        <true/>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT/bot/logs/capture-stdout.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT/bot/logs/capture-stderr.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+</dict>
+</plist>
