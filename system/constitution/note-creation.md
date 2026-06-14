@@ -13,6 +13,7 @@
 | Real vendor | `Dawson's wiki/wiki/Vendors/{Vendor}.md` |
 | Real task or follow-up | `Dawson's wiki/wiki/Tasks/TASK-#### - {title}.md` |
 | Important decision | `Dawson's wiki/wiki/04 Decisions.md` (single log first) |
+| Research/comparison (via `/research`) | `Dawson's wiki/wiki/Research/{Room}/{Title}.md` |
 
 Task IDs: zero-padded four digits (`TASK-0001`).
 
@@ -24,6 +25,22 @@ Items live under room folders, not a global `Items/` folder.
 Dawson's wiki/wiki/Rooms/Kitchen/Kitchen.md
 Dawson's wiki/wiki/Rooms/Kitchen/Induction Hob.md
 ```
+
+## Research layout
+
+`/research` notes mirror the room layout under their own top-level folder, so
+they're easy to browse alongside the room they relate to without being mistaken
+for compiled item facts:
+
+```text
+Dawson's wiki/wiki/Research/Living-Dining/Extendable Dining Tables Under $1500.md
+Dawson's wiki/wiki/Research/General/{Title}.md   (when no existing room fits)
+```
+
+Room must match an existing `Rooms/` folder name, or `General`. One note per
+`/research` request; if the filename already exists, append ` (2)`, ` (3)`, etc.
+rather than overwriting (each research run is a snapshot, not an update to a
+single tracked fact).
 
 ## Do not create yet
 

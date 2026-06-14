@@ -20,6 +20,10 @@ Design notes:
     - Read-only Conversation agent: answers questions from the compiled wiki
       (Dawson's wiki/wiki/**). Never writes to the wiki directly (per
       system/agents/conversation.md and write-safety.md).
+    - /research is a separate, narrowly-scoped Research agent (research_agent.py)
+      that DOES write to the wiki — but only new notes under
+      Dawson's wiki/wiki/Research/**, never Rooms/Vendors/Tasks/Decisions (see
+      system/agents/research.md and write-safety.md).
     - Wiki content is loaded fresh on every message (cheap — small vault) so
       edits made via the Compiler are reflected immediately without restarting
       the bot. Use /refresh to force-reload if you ever cache this.
@@ -34,6 +38,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import sys
 
 from dotenv import load_dotenv
@@ -49,6 +54,7 @@ from telegram.ext import (
     filters,
 )
 
+import research_agent
 from wiki_context import build_system_prompt
 
 logging.basicConfig(
@@ -155,6 +161,9 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         "make changes myself; if you ask for an update, I'll explain what should "
         "go through the review queue + compile step.\n\n"
         "Commands:\n"
+        "/research <description> — search the web for alternatives (e.g. "
+        "\"/research extendable dining table, ~180x90cm, dark wood, under $1500 "
+        "SGD, for the Living-Dining room\") and save a comparison note to the wiki\n"
         "/reset — clear this chat's conversation memory\n"
         "/help — show this message again"
     )
@@ -167,6 +176,52 @@ async def reset_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     chat_id = update.effective_chat.id
     conversation_history.pop(chat_id, None)
     await update.message.reply_text("Conversation memory cleared.")
+
+
+async def research_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user = update.effective_user
+    message = update.message
+    if not user or not message:
+        return
+
+    if not _is_allowed(user.id):
+        logger.warning("Rejected /research from unauthorized user_id=%s", user.id)
+        await message.reply_text(
+            "Sorry, this bot is private and not configured for your account."
+        )
+        return
+
+    # Everything after "/research" (and an optional "@botname")
+    query = re.sub(r"^/research(@\w+)?\s*", "", message.text or "", count=1).strip()
+    if not query:
+        await message.reply_text(
+            "Usage: /research <description>\n\n"
+            "Example: /research extendable dining table, ~180x90cm, dark wood, "
+            "under $1500 SGD, for the Living-Dining room"
+        )
+        return
+
+    chat_id = update.effective_chat.id
+    await context.bot.send_chat_action(chat_id=chat_id, action=ChatAction.TYPING)
+    await message.reply_text("Researching alternatives — this can take ~30-60s...")
+
+    try:
+        result = research_agent.run_research(query, CONFIG["model"], CLAUDE)
+        path = research_agent.save_research_note(
+            result["title"], result["room"], result["note_markdown"]
+        )
+    except Exception:  # noqa: BLE001 - want to report any failure to the user
+        logger.exception("Research agent failed")
+        await message.reply_text(
+            "Sorry, the research agent ran into an error. Please try again."
+        )
+        return
+
+    rel_path = path.relative_to(research_agent.REPO_ROOT)
+    reply_text = f"{result['summary']}\n\nSaved to: {rel_path}"
+
+    for i in range(0, len(reply_text), TELEGRAM_MAX_MESSAGE_LEN):
+        await message.reply_text(reply_text[i : i + TELEGRAM_MAX_MESSAGE_LEN])
 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -232,6 +287,7 @@ def main() -> None:
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(CommandHandler("help", start_command))
     app.add_handler(CommandHandler("reset", reset_command))
+    app.add_handler(CommandHandler("research", research_command))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     logger.info(

@@ -7,6 +7,7 @@
 | Extractor | [extractor.md](extractor.md) | `system/review_queue/`, `system/runs/`, `system/state/` |
 | Compiler | [compiler.md](compiler.md) | `Dawson's wiki/wiki/`, `system/runs/`, `system/state/` |
 | Conversation | [conversation.md](conversation.md) | `system/review_queue/`, `system/runs/` |
+| Research | [research.md](research.md) | `Dawson's wiki/wiki/Research/` only |
 
 Pipeline order: Ingestion → Extractor → (review) → Compiler.
 

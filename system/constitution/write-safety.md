@@ -10,6 +10,7 @@
 | **Extractor** | Read inputs → structured facts → review queue |
 | **Compiler** | Write `Dawson's wiki/wiki/` |
 | **Conversation** | Read wiki, propose via review queue |
+| **Research** | Write new notes under `Dawson's wiki/wiki/Research/` only |
 
 ---
 
@@ -21,6 +22,7 @@ Who is responsible for each area. See **folder access** for read/write rules.
 |--------|----------|----------------|
 | `Dawson's wiki/inbox/` | Human | Quick capture |
 | `Dawson's wiki/wiki/` | Compiler | Compiled renovation database |
+| `Dawson's wiki/wiki/Research/` | Research | Web-research comparison notes (not renovation facts) |
 | `raw/` | Ingestion | Imported Sheets/Drive snapshots |
 | `system/review_queue/` | Human | Approve or reject proposed compiles |
 | `system/constitution/`, `agents/`, `prompts/`, `schemas/` | Harness | Rules, roles, prompts, schemas |
@@ -51,6 +53,23 @@ Who is responsible for each area. See **folder access** for read/write rules.
 | Extractor | ✓ | ✗ |
 | Compiler | ✓ | ✓ per [note-creation.md](note-creation.md); merge only |
 | Conversation | ✓ | ✗ — propose via review queue |
+
+### `Dawson's wiki/wiki/Research/`
+
+| Role | Read | Write |
+|------|------|-------|
+| Human | ✓ | ✓ |
+| Harness | ✓ | ✗ |
+| Ingestion | ✓ | ✗ |
+| Extractor | ✓ | ✗ |
+| Compiler | ✓ | ✗ |
+| Conversation | ✓ | ✗ |
+| **Research** | ✓ | **✓ new notes only, via `/research`** |
+
+Web-research comparison notes (e.g. "alternatives to the dining table"), not
+renovation facts about items already owned/ordered — no review-queue gate
+needed since nothing here overrides compiled item data. Organised by room,
+mirroring `Rooms/` (see [note-creation.md](note-creation.md)).
 
 ### `raw/sheets/`, `raw/drive/`
 

@@ -301,6 +301,14 @@ Commands:
 - `/start` or `/help` — intro message
 - `/reset` — clear this chat's conversation memory (useful if it gets confused or you
   want to start a fresh topic)
+- `/research <description>` — search the web for real alternatives matching your
+  description (dimensions, functionality, style, budget) and save a comparison note to
+  `Dawson's wiki/wiki/Research/{Room}/`. Example:
+  `/research extendable dining table, ~180x90cm, dark wood, under $1500 SGD, for the
+  Living-Dining room`. Takes ~30-60s (it runs several web searches). Unlike normal chat,
+  this *does* write a new file to the wiki — but only a new note under `Research/`,
+  never to `Rooms/`, `Vendors/`, `Tasks/`, or `04 Decisions.md`. See
+  `system/agents/research.md`.
 
 If you ask it to change something ("mark the dining table as delivered", "update the
 ironing set price to $599"), it will explain what the change would be and that it needs
@@ -319,14 +327,24 @@ the wiki itself.
   sender's Telegram user ID against `TELEGRAM_ALLOWED_USER_IDS`, keeps a short
   in-memory conversation history per chat (lost on restart), and calls the Anthropic
   API (`anthropic` SDK) with the system prompt + history.
+- `research_agent.py` — backs `/research`. One Anthropic API call with the
+  `web_search_20250305` server tool does the searching and returns a full Markdown
+  note + chat summary in one response; `telegram_bot.py` saves the note under
+  `Dawson's wiki/wiki/Research/{Room}/`. See `system/agents/research.md`.
 
 ## Known limitations / future ideas
 
 - No persistence — restart loses conversation history (acceptable for Q&A).
-- No write path — by design (see write-safety.md). If/when you want the bot to be able
-  to *propose* review-queue entries directly, that would need the bot process to have
-  filesystem write access to `system/review_queue/` and careful prompt-injection
-  defenses, since Telegram input is less trusted than a Claude Code session.
+- No write path for the Conversation agent (normal chat) — by design (see
+  write-safety.md). `/research` is the one exception: a separate, narrowly-scoped
+  Research agent that writes new notes under `Dawson's wiki/wiki/Research/` only (see
+  system/agents/research.md). If/when you want the bot to be able to *propose*
+  review-queue entries directly from normal chat, that would need filesystem write
+  access to `system/review_queue/` and careful prompt-injection defenses, since
+  Telegram input is less trusted than a Claude Code session.
+- `/research` notes are not committed/pushed automatically — they show up as new files
+  in `git status` on whichever machine runs the bot, for you to review and commit like
+  any other change.
 - If the wiki grows much larger (hundreds of notes), the "load everything every time"
   approach in `wiki_context.py` will need to move to retrieval (embeddings/search)
   rather than full-context loading.
