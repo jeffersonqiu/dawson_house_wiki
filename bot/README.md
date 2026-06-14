@@ -344,11 +344,31 @@ Commands:
   this *does* write a new file to the wiki — but only a new note under `Research/`,
   never to `Rooms/`, `Vendors/`, `Tasks/`, or `04 Decisions.md`. See
   `system/agents/research.md`.
+- `/note <text>` — quick-capture something you noticed during the day (a price, a
+  vendor quote, an idea). Example: `/note Senso Studio quoted $4200 for kitchen
+  cabinets`. Appended to `Dawson's wiki/inbox/{date} telegram capture.md`.
+- Send a **photo** (with an optional caption) — also quick-captured: saved under
+  `Dawson's wiki/zz_images/` and linked from today's capture file via the caption (or
+  blank if none).
 
 If you ask it to change something ("mark the dining table as delivered", "update the
 ironing set price to $599"), it will explain what the change would be and that it needs
 to go through `/extract` → review → `/compile` in a Claude Code session — it won't edit
 the wiki itself.
+
+### End-of-day clarification review
+
+Once a day (`DAILY_REVIEW_HOUR`, default 21:00 in `WIKI_TZ`, default
+`Asia/Singapore`), if you captured anything via `/note` or a photo that day, the bot
+asks the configured LLM to find up to `DAILY_REVIEW_MAX_QUESTIONS` (default 3) points
+that are ambiguous — which room/vendor something relates to, whether a price is a quote
+or final, what's in a photo, etc. — including looking at any photos you sent.
+
+Each question arrives as a Telegram message with inline buttons: pick one, tap "Other"
+to type a free-text answer, or "Skip". Your answers are appended to that day's capture
+file under a `## Clarifications` section for `/extract` to pick up later. If you didn't
+capture anything that day, or the notes are already clear, nothing is sent — it's
+silent. See `system/agents/capture.md`.
 
 ---
 
@@ -372,10 +392,26 @@ the wiki itself.
   API, `TAVILY_API_KEY`) up to 8 times, then writes a full Markdown note + chat summary
   in its final response; `telegram_bot.py` saves the note under
   `Dawson's wiki/wiki/Research/{Room}/`. See `system/agents/research.md`.
+- `capture.py` — backs `/note` and photo messages: appends timestamped entries to
+  `Dawson's wiki/inbox/{date} telegram capture.md` (Obsidian `![[filename]]` embeds for
+  photos saved under `Dawson's wiki/zz_images/`).
+- `daily_review.py` — the end-of-day clarification review, registered as a
+  `JobQueue.run_daily()` job. Sends the day's capture file (text + any photos, as
+  vision content) to `LLM_MODEL`, which returns up to `DAILY_REVIEW_MAX_QUESTIONS`
+  multiple-choice questions as JSON; presents them via Telegram inline keyboards
+  (`CallbackQueryHandler`) and appends answers to the capture file under
+  `## Clarifications`. See `system/agents/capture.md`.
 
 ## Known limitations / future ideas
 
-- No persistence — restart loses conversation history (acceptable for Q&A).
+- The end-of-day review assumes 1:1 private chats only — it messages each
+  `TELEGRAM_ALLOWED_USER_IDS` entry directly, relying on Telegram's `chat_id == user_id`
+  for private chats. It won't work correctly in a group chat.
+- No persistence — restart loses conversation history (acceptable for Q&A). An
+  in-progress end-of-day review is also lost on restart: the capture file is only
+  marked `reviewed: true` after the review completes, but a new review for that day
+  isn't retried until the next day's job runs (which only looks at *that* day's file) —
+  low-impact edge case for personal use.
 - No write path for the Conversation agent (normal chat) — by design (see
   write-safety.md). `/research` is the one exception: a separate, narrowly-scoped
   Research agent that writes new notes under `Dawson's wiki/wiki/Research/` only (see

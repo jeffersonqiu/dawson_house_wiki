@@ -23,6 +23,12 @@ Required environment variables (see bot/.env.example):
     TAVILY_API_KEY           — required for /research's web_search tool
                                 (https://tavily.com), regardless of LLM_MODEL.
                                 Also soft-required, same as above.
+    DAILY_REVIEW_HOUR        — optional, hour (0-23, WIKI_TZ) at which the daily
+                                clarification review runs (default: 21, i.e. 9pm).
+    DAILY_REVIEW_MAX_QUESTIONS — optional, max clarifying questions asked per day
+                                (default: 3).
+    WIKI_TZ                  — optional, IANA timezone for /note timestamps and
+                                the daily review schedule (default: Asia/Singapore).
 
 GCP Secret Manager (optional, used for deployment — see bot/gcp/):
     If GCP_PROJECT_ID is set and a required *_API_KEY / TELEGRAM_BOT_TOKEN is NOT
@@ -54,6 +60,18 @@ Design notes:
     - Access is restricted to TELEGRAM_ALLOWED_USER_IDS — anyone else messaging
       the bot gets a polite refusal. This matters because the wiki contains
       personal financial/renovation data.
+    - /note <text> and photo messages are quick-capture: they append a
+      timestamped entry to Dawson's wiki/inbox/{date} telegram capture.md
+      (and save any photo under Dawson's wiki/zz_images/), via capture.py.
+      Same write-safety as the user's own manual inbox notes — never touches
+      the compiled wiki (see system/agents/capture.md).
+    - Once a day (DAILY_REVIEW_HOUR), daily_review.py asks the configured LLM
+      to find up to DAILY_REVIEW_MAX_QUESTIONS ambiguous points in that day's
+      capture file (incl. any photos, via vision) and asks the user via
+      Telegram inline-keyboard multiple choice. Answers are appended to the
+      capture file as a "## Clarifications" section for the Extractor to pick
+      up later. Soft-required like chat/research: silently skipped if the LLM
+      key isn't configured.
 """
 
 from __future__ import annotations
@@ -62,6 +80,7 @@ import logging
 import os
 import re
 import sys
+from datetime import time as dt_time
 
 from dotenv import load_dotenv
 
@@ -69,12 +88,15 @@ from telegram import Update
 from telegram.constants import ChatAction
 from telegram.ext import (
     Application,
+    CallbackQueryHandler,
     CommandHandler,
     ContextTypes,
     MessageHandler,
     filters,
 )
 
+import capture
+import daily_review
 import llm_client
 import research_agent
 from wiki_context import build_system_prompt
@@ -203,6 +225,9 @@ def _load_config() -> dict:
             "Set it to your Telegram numeric user ID (get it from @userinfobot)."
         )
 
+    daily_review_hour = int(os.environ.get("DAILY_REVIEW_HOUR", "21"))
+    daily_review_max_questions = int(os.environ.get("DAILY_REVIEW_MAX_QUESTIONS", "3"))
+
     return {
         "telegram_token": token,
         "llm_model": llm_model,
@@ -210,6 +235,8 @@ def _load_config() -> dict:
         "missing_llm_key": missing_llm_key,
         "missing_research_key": missing_research_key,
         "allowed_user_ids": allowed_ids,
+        "daily_review_hour": daily_review_hour,
+        "daily_review_max_questions": daily_review_max_questions,
     }
 
 
@@ -236,11 +263,20 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         "make changes myself; if you ask for an update, I'll explain what should "
         "go through the review queue + compile step.\n\n"
         "Commands:\n"
+        "/note <text> — quick-capture a note for later (e.g. \"/note Senso "
+        "Studio quoted $4200 for kitchen cabinets\") — saved to today's inbox "
+        "capture file\n"
+        "Send a photo (with optional caption) — also quick-captured, saved "
+        "under zz_images/ and linked from today's capture file\n"
         "/research <description> — search the web for alternatives (e.g. "
         "\"/research extendable dining table, ~180x90cm, dark wood, under $1500 "
         "SGD, for the Living-Dining room\") and save a comparison note to the wiki\n"
         "/reset — clear this chat's conversation memory\n"
-        "/help — show this message again"
+        "/help — show this message again\n\n"
+        f"Each evening (around {CONFIG['daily_review_hour']:02d}:00 "
+        f"{capture.WIKI_TZ}), I'll ask up to "
+        f"{CONFIG['daily_review_max_questions']} quick multiple-choice questions "
+        "about anything unclear in that day's notes."
     )
 
 
@@ -251,6 +287,56 @@ async def reset_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     chat_id = update.effective_chat.id
     conversation_history.pop(chat_id, None)
     await update.message.reply_text("Conversation memory cleared.")
+
+
+async def note_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user = update.effective_user
+    message = update.message
+    if not user or not message:
+        return
+
+    if not _is_allowed(user.id):
+        logger.warning("Rejected /note from unauthorized user_id=%s", user.id)
+        await message.reply_text(
+            "Sorry, this bot is private and not configured for your account."
+        )
+        return
+
+    text = re.sub(r"^/note(@\w+)?\s*", "", message.text or "", count=1).strip()
+    if not text:
+        await message.reply_text(
+            "Usage: /note <text>\n\n"
+            "Example: /note Senso Studio quoted $4200 for kitchen cabinets"
+        )
+        return
+
+    path = capture.append_entry(text)
+    rel_path = path.relative_to(capture.REPO_ROOT)
+    await message.reply_text(f"Saved to {rel_path}")
+
+
+async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user = update.effective_user
+    message = update.message
+    if not user or not message or not message.photo:
+        return
+
+    if not _is_allowed(user.id):
+        logger.warning("Rejected photo from unauthorized user_id=%s", user.id)
+        await message.reply_text(
+            "Sorry, this bot is private and not configured for your account."
+        )
+        return
+
+    capture.IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+    filename = capture.save_photo_filename()
+    photo_file = await context.bot.get_file(message.photo[-1].file_id)
+    await photo_file.download_to_drive(custom_path=capture.IMAGES_DIR / filename)
+
+    caption = (message.caption or "").strip()
+    path = capture.append_entry(caption, image_filename=filename)
+    rel_path = path.relative_to(capture.REPO_ROOT)
+    await message.reply_text(f"Saved photo to {rel_path}")
 
 
 async def research_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -332,6 +418,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     if not user_text:
         return
 
+    # If a daily-review question is awaiting a free-text ("Other") answer,
+    # consume this message as that answer instead of normal chat.
+    if await daily_review.handle_free_text_answer(update, context):
+        return
+
     if CONFIG["missing_llm_key"]:
         await message.reply_text(
             f"Chat isn't configured yet — {CONFIG['missing_llm_key']} is missing "
@@ -381,15 +472,43 @@ def main() -> None:
     app.add_handler(CommandHandler("help", start_command))
     app.add_handler(CommandHandler("reset", reset_command))
     app.add_handler(CommandHandler("research", research_command))
+    app.add_handler(CommandHandler("note", note_command))
+    app.add_handler(MessageHandler(filters.PHOTO, photo_handler))
+    app.add_handler(
+        CallbackQueryHandler(
+            daily_review.callback_handler,
+            pattern=rf"^{daily_review.CALLBACK_PREFIX}\|",
+        )
+    )
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
+    if app.job_queue is not None:
+        app.job_queue.run_daily(
+            daily_review.daily_review_job,
+            time=dt_time(hour=CONFIG["daily_review_hour"], minute=0, tzinfo=capture.WIKI_TZ),
+            data={
+                "llm_model": CONFIG["llm_model"],
+                "missing_llm_key": CONFIG["missing_llm_key"],
+                "max_questions": CONFIG["daily_review_max_questions"],
+                "allowed_user_ids": CONFIG["allowed_user_ids"],
+            },
+        )
+    else:
+        logger.warning(
+            "JobQueue is unavailable (install python-telegram-bot[job-queue]) — "
+            "the daily clarification review is disabled."
+        )
+
     logger.info(
-        "Starting Dawson House Wiki Telegram bot (llm_model=%s%s, research_llm_model=%s%s, allowed_users=%s)",
+        "Starting Dawson House Wiki Telegram bot (llm_model=%s%s, research_llm_model=%s%s, "
+        "allowed_users=%s, daily_review=%02d:00 %s)",
         CONFIG["llm_model"],
         " [NOT CONFIGURED]" if CONFIG["missing_llm_key"] else "",
         CONFIG["research_llm_model"],
         " [NOT CONFIGURED]" if CONFIG["missing_research_key"] else "",
         sorted(CONFIG["allowed_user_ids"]) or "NONE",
+        CONFIG["daily_review_hour"],
+        capture.WIKI_TZ,
     )
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 

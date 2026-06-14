@@ -11,6 +11,7 @@
 | **Compiler** | Write `Dawson's wiki/wiki/` |
 | **Conversation** | Read wiki, propose via review queue |
 | **Research** | Write new notes under `Dawson's wiki/wiki/Research/` only |
+| **Capture** | Append-only quick-capture to `Dawson's wiki/inbox/` + `zz_images/` |
 
 ---
 
@@ -20,7 +21,8 @@ Who is responsible for each area. See **folder access** for read/write rules.
 
 | Folder | Owned by | Responsibility |
 |--------|----------|----------------|
-| `Dawson's wiki/inbox/` | Human | Quick capture |
+| `Dawson's wiki/inbox/` | Human | Quick capture (Capture agent may also append new daily capture files) |
+| `Dawson's wiki/zz_images/` | Human | Photos referenced from inbox notes (Capture agent may add new ones) |
 | `Dawson's wiki/wiki/` | Compiler | Compiled renovation database |
 | `Dawson's wiki/wiki/Research/` | Research | Web-research comparison notes (not renovation facts) |
 | `raw/` | Ingestion | Imported Sheets/Drive snapshots |
@@ -42,6 +44,19 @@ Who is responsible for each area. See **folder access** for read/write rules.
 | Extractor | ✓ | ✗ |
 | Compiler | ✓ | ✗ |
 | Conversation | ✓ | ✗ |
+| **Capture** | ✓ | **✓ new `{date} telegram capture.md` files only; may append to its own files, never edit/delete other inbox notes** |
+
+### `Dawson's wiki/zz_images/`
+
+| Role | Read | Write |
+|------|------|-------|
+| Human | ✓ | ✓ |
+| Harness | ✓ | ✗ |
+| Ingestion | ✓ | ✗ |
+| Extractor | ✓ | ✗ |
+| Compiler | ✓ | ✗ |
+| Conversation | ✓ | ✗ |
+| **Capture** | ✓ | **✓ new photo files only, via `/note`/photo messages** |
 
 ### `Dawson's wiki/wiki/` (compiled)
 
