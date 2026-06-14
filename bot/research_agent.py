@@ -7,18 +7,24 @@ only ever creates new notes under Research/. It never touches Rooms/, Vendors/,
 Tasks/, or 04 Decisions.md (the Compiler's territory), so it doesn't need the
 review-queue gate in write-safety.md.
 
-Design: a single Anthropic API call with the server-side web_search tool does
-the searching and writes the full note (with YAML frontmatter) in one shot,
-followed by a delimiter and a short chat-friendly summary. This keeps the
-implementation simple — no multi-turn orchestration needed.
+Design: model-agnostic via litellm. The LLM drives a client-side tool-calling
+loop — it calls the `web_search` function (backed by the Tavily Search API,
+TAVILY_API_KEY) up to MAX_SEARCH_ITERATIONS times, then writes the full note
+(with YAML frontmatter), followed by a delimiter and a short chat-friendly
+summary. Because web search is a normal function tool (not a provider-native
+server-side tool), this works with any litellm model that supports tool
+calling (Claude, GPT, Gemini, ...) — set via RESEARCH_LLM_MODEL/LLM_MODEL.
 """
 
 from __future__ import annotations
 
+import json
+import os
 import pathlib
 import re
 
-import anthropic
+import httpx
+import litellm
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
 WIKI_DIR = REPO_ROOT / "Dawson's wiki" / "wiki"
@@ -26,6 +32,61 @@ ROOMS_DIR = WIKI_DIR / "Rooms"
 RESEARCH_DIR = WIKI_DIR / "Research"
 
 SUMMARY_MARKER = "===SUMMARY==="
+MAX_SEARCH_ITERATIONS = 8
+
+TAVILY_API_URL = "https://api.tavily.com/search"
+
+WEB_SEARCH_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "web_search",
+        "description": (
+            "Search the web for current information. Returns the top results "
+            "with titles, URLs, and content snippets."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "The search query.",
+                }
+            },
+            "required": ["query"],
+        },
+    },
+}
+
+
+def _tavily_search(query: str) -> str:
+    """Run a web search via the Tavily Search API, returning a text blob of
+    results (title/URL/snippet per result) for the model to read."""
+    api_key = os.environ.get("TAVILY_API_KEY")
+    try:
+        response = httpx.post(
+            TAVILY_API_URL,
+            json={
+                "api_key": api_key,
+                "query": query,
+                "max_results": 5,
+                "search_depth": "basic",
+            },
+            timeout=30,
+        )
+        response.raise_for_status()
+    except httpx.HTTPError as exc:
+        return f"Search failed: {exc}"
+
+    results = response.json().get("results", [])
+    if not results:
+        return "No results found."
+
+    return "\n\n".join(
+        f"Title: {r.get('title', 'N/A')}\n"
+        f"URL: {r.get('url', 'N/A')}\n"
+        f"Content: {(r.get('content') or '')[:1000]}"
+        for r in results
+    )
 
 
 def _existing_rooms() -> list[str]:
@@ -45,12 +106,15 @@ write up a comparison note.
 
 ## Task
 
-1. Use the web_search tool to find 3-5 real, currently-available products that
-   match the user's description (dimensions, functionality, style, budget).
-   Prefer options available in Singapore (SGD pricing) when relevant, but
-   include good international options too if useful.
-2. Write a single self-contained Markdown note in the same style as this
-   project's compiled wiki notes: YAML frontmatter, then a body with sections.
+1. Use the web_search tool (up to {MAX_SEARCH_ITERATIONS} calls total) to find
+   3-5 real, currently-available products that match the user's description
+   (dimensions, functionality, style, budget). Prefer options available in
+   Singapore (SGD pricing) when relevant, but include good international
+   options too if useful.
+2. Once you have enough information, STOP calling tools and write a single
+   self-contained Markdown note in the same style as this project's compiled
+   wiki notes: YAML frontmatter, then a body with sections, exactly as
+   specified below.
 
 ## Output format — respond with EXACTLY two parts and nothing else
 
@@ -115,7 +179,8 @@ Found <N> options for: <one-line restatement of the request>
 
 Recommended: <top pick name> (<price>) - <one sentence why>
 
-IMPORTANT: Output ONLY these two parts. Do not add any commentary, preamble,
+IMPORTANT: This final response (Part 1 + Part 2) must NOT include any more
+tool calls. Output ONLY these two parts. Do not add any commentary, preamble,
 or sign-off before, between, or after them — including before Part 1 or after
 Part 2. Do not wrap the note in a code fence (no ``` anywhere) — Part 1 must
 start directly with the `---` of the YAML frontmatter as its very first
@@ -199,28 +264,57 @@ def _parse_frontmatter(note_markdown: str) -> dict[str, str]:
     return fields
 
 
-def run_research(query: str, model: str, client: anthropic.Anthropic) -> dict:
-    """Run the research agent for `query`.
+def run_research(query: str, model: str) -> dict:
+    """Run the research agent for `query` using `model` (a litellm
+    "<provider>/<model>" string).
 
     Returns a dict with keys: note_markdown, title, room, summary.
     """
-    # Stream the response: this is a long agentic request (up to 8 web
-    # searches), and non-streaming requests of this length have been observed
-    # to get dropped by intermediaries ("Server disconnected without sending
-    # a response") before completing. Streaming keeps the connection alive.
-    with client.messages.stream(
-        model=model,
-        max_tokens=8000,
-        temperature=0.2,  # consistent structure/formatting over creativity
-        system=_build_system_prompt(),
-        tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 8}],
-        messages=[{"role": "user", "content": query}],
-    ) as stream:
-        response = stream.get_final_message()
+    system = _build_system_prompt()
+    messages: list[dict] = [{"role": "user", "content": query}]
 
-    full_text = "".join(
-        block.text for block in response.content if block.type == "text"
-    ).strip()
+    full_text = ""
+    for _ in range(MAX_SEARCH_ITERATIONS + 1):
+        response = litellm.completion(
+            model=model,
+            max_tokens=8000,
+            temperature=0.2,  # consistent structure/formatting over creativity
+            messages=[{"role": "system", "content": system}, *messages],
+            tools=[WEB_SEARCH_TOOL],
+        )
+        msg = response.choices[0].message
+        tool_calls = msg.tool_calls or []
+
+        if not tool_calls:
+            full_text = (msg.content or "").strip()
+            break
+
+        messages.append(
+            {
+                "role": "assistant",
+                "content": msg.content,
+                "tool_calls": [tc.model_dump() for tc in tool_calls],
+            }
+        )
+        for tc in tool_calls:
+            try:
+                args = json.loads(tc.function.arguments)
+            except (json.JSONDecodeError, TypeError):
+                args = {}
+            result = _tavily_search(args.get("query", query))
+            messages.append(
+                {"role": "tool", "tool_call_id": tc.id, "content": result}
+            )
+    else:
+        # Hit the iteration cap while the model still wanted to search — force
+        # a final answer with no further tool access.
+        response = litellm.completion(
+            model=model,
+            max_tokens=8000,
+            temperature=0.2,
+            messages=[{"role": "system", "content": system}, *messages],
+        )
+        full_text = (response.choices[0].message.content or "").strip()
 
     if SUMMARY_MARKER in full_text:
         note_markdown, _, summary = full_text.partition(SUMMARY_MARKER)

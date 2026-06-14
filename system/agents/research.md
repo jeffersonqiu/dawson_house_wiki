@@ -15,8 +15,8 @@ description — and write up a comparison note.
 - User's free-text request (via `/research <description>` in Telegram)
 - `Dawson's wiki/wiki/Rooms/*` — existing room names, used to file the note
   under a matching room (or `General` if none fit)
-- Web search results (Anthropic `web_search_20250305` server tool, billed to
-  the same `ANTHROPIC_API_KEY` as the Conversation agent)
+- Web search results (Tavily Search API, `TAVILY_API_KEY`, called as a
+  client-side `web_search` tool — independent of which LLM is configured)
 
 ## Outputs
 
@@ -40,10 +40,15 @@ description — and write up a comparison note.
 
 ## Implementation notes
 
-- Single Anthropic API call per request: system prompt + `web_search_20250305`
-  tool (`max_uses: 5`), `max_tokens: 8000`. The model both searches and writes
-  the full note + a `===SUMMARY===`-delimited chat reply in one response — no
-  multi-turn orchestration.
+- Model-agnostic via [litellm](https://docs.litellm.ai/) (`RESEARCH_LLM_MODEL`,
+  default same as `LLM_MODEL` — works with Claude, GPT, Gemini, etc.). The
+  model drives a client-side tool-calling loop: it calls a `web_search`
+  function tool (backed by the Tavily Search API, `TAVILY_API_KEY`) up to 8
+  times, then — with no further tool calls — writes the full note + a
+  `===SUMMARY===`-delimited chat reply in its final response.
+- `TAVILY_API_KEY` is required for `/research` regardless of `LLM_MODEL`. If
+  it's not configured, `/research` replies that it isn't set up yet; the rest
+  of the bot is unaffected.
 - No review-queue gate: research notes are reference material about *options*,
   not facts about items already owned/ordered, so they can't conflict with
   compiled wiki data. The human reviews/acts on them like any other note.

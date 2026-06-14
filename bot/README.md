@@ -33,7 +33,15 @@ it for a personal assistant. See `system/agents/conversation.md` for more detail
    billed per API usage; the wiki is small so costs per query should be a few cents at
    most with Sonnet).
 
-### 4. Configure
+### 4. Get a Tavily API key
+
+1. Go to https://tavily.com and sign up (free tier available).
+2. Copy your API key from the dashboard.
+
+This powers `/research`'s `web_search` tool — required regardless of which LLM(s) you
+configure below (see "Model-agnostic agents" below).
+
+### 5. Configure
 
 ```bash
 cd "dawson_house_wiki/bot"
@@ -47,13 +55,14 @@ TELEGRAM_BOT_TOKEN=123456789:AAExampleTokenFromBotFather
 TELEGRAM_ALLOWED_USER_IDS=111111111,222222222   # your ID, and Marcella's if desired
 ANTHROPIC_API_KEY=sk-ant-...
 CLAUDE_MODEL=claude-sonnet-4-6                  # optional, this is the default
+TAVILY_API_KEY=tvly-...
 ```
 
 `bot/.env` is gitignored — never commit it.
 
-#### Optional: use ChatGPT (or another provider) for everyday chat
+#### Optional: use ChatGPT (or another provider) for everyday chat and/or /research
 
-Everyday chat (not `/research`) is routed through [litellm](https://docs.litellm.ai/),
+Both everyday chat and `/research` are routed through [litellm](https://docs.litellm.ai/),
 so the model/provider is a config change — no code changes. Set `LLM_MODEL` to a
 litellm `"<provider>/<model>"` string plus that provider's API key, e.g.:
 
@@ -62,11 +71,22 @@ LLM_MODEL=openai/gpt-4o-mini
 OPENAI_API_KEY=sk-...
 ```
 
-`ANTHROPIC_API_KEY` is still required either way — `/research`'s web search
-always uses Claude directly (see "How it works" below). If `LLM_MODEL` is
-unset, everyday chat defaults to `anthropic/<CLAUDE_MODEL>`, same as before.
+This changes the model for both everyday chat and `/research`. To use a different model
+for `/research` only (e.g. a stronger model for research, cheaper for chat), set
+`RESEARCH_LLM_MODEL` separately:
 
-### 5. Run it
+```env
+LLM_MODEL=openai/gpt-4o-mini
+RESEARCH_LLM_MODEL=anthropic/claude-sonnet-4-6
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+`/research`'s `web_search` tool is backed by Tavily (`TAVILY_API_KEY`) either way — that's
+independent of `LLM_MODEL`/`RESEARCH_LLM_MODEL`. If `LLM_MODEL` is unset, both default to
+`anthropic/<CLAUDE_MODEL>`, same as before.
+
+### 6. Run it
 
 ```bash
 cd "dawson_house_wiki/bot"
@@ -342,13 +362,15 @@ the wiki itself.
   sender's Telegram user ID against `TELEGRAM_ALLOWED_USER_IDS`, keeps a short
   in-memory conversation history per chat (lost on restart), and calls the
   Conversation agent's model via `llm_client.py` with the system prompt + history.
-- `llm_client.py` — thin [litellm](https://docs.litellm.ai/) wrapper used only by the
+- `llm_client.py` — thin [litellm](https://docs.litellm.ai/) wrapper used by the
   Conversation agent (everyday chat). `LLM_MODEL` (`"<provider>/<model>"`, default
   `anthropic/<CLAUDE_MODEL>`) selects the model/provider; litellm reads the matching
-  `*_API_KEY` from the environment. `/research` is unaffected — see next.
-- `research_agent.py` — backs `/research`. One Anthropic API call with the
-  `web_search_20250305` server tool does the searching and returns a full Markdown
-  note + chat summary in one response; `telegram_bot.py` saves the note under
+  `*_API_KEY` from the environment.
+- `research_agent.py` — backs `/research`. Also model-agnostic via litellm
+  (`RESEARCH_LLM_MODEL`, default same as `LLM_MODEL`): the model drives a client-side
+  tool-calling loop, calling a `web_search` function tool (backed by the Tavily Search
+  API, `TAVILY_API_KEY`) up to 8 times, then writes a full Markdown note + chat summary
+  in its final response; `telegram_bot.py` saves the note under
   `Dawson's wiki/wiki/Research/{Room}/`. See `system/agents/research.md`.
 
 ## Known limitations / future ideas
@@ -364,10 +386,9 @@ the wiki itself.
 - `/research` notes are not committed/pushed automatically — they show up as new files
   in `git status` on whichever machine runs the bot, for you to review and commit like
   any other change.
-- `/research` always uses Claude (`ANTHROPIC_API_KEY` + `CLAUDE_MODEL`) regardless of
-  `LLM_MODEL`, because it depends on Claude's server-side `web_search` tool. Switching
-  everyday chat to another provider via `LLM_MODEL` does not change `/research`'s cost
-  or model — and doesn't remove the need for a funded `ANTHROPIC_API_KEY`.
+- `/research` requires `TAVILY_API_KEY` (its `web_search` tool is always Tavily-backed,
+  regardless of `LLM_MODEL`/`RESEARCH_LLM_MODEL`). If it's missing, `/research` replies
+  that it isn't configured yet but the rest of the bot keeps working normally.
 - If the wiki grows much larger (hundreds of notes), the "load everything every time"
   approach in `wiki_context.py` will need to move to retrieval (embeddings/search)
   rather than full-context loading.
