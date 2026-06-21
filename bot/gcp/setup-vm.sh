@@ -88,6 +88,7 @@ for svc in "${SERVICE_NAME}:dawsonhouse-wikibot.service.example" "${CAPTURE_SERV
   sed -e "s#REPLACE_WITH_ABSOLUTE_PATH_TO_PROJECT#${REPO_DIR}#g" \
       -e "s#REPLACE_WITH_GCP_PROJECT_ID#${PROJECT_ID}#g" \
       -e "s#REPLACE_WITH_USER#$(whoami)#g" \
+      -e "s#REPLACE_WITH_GCS_IMAGES_BUCKET#dawson-wiki-images#g" \
       "$svc_src" | sudo tee "$svc_dst" > /dev/null
   sudo systemctl daemon-reload
   sudo systemctl enable "$svc_name"

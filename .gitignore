@@ -17,3 +17,9 @@ system/state/*.secret.json
 # Telegram bot — local runtime artifacts
 bot/.venv/
 bot/logs/*.log
+
+# Captured images — stored in GCS, not git (use bot/gcp/sync-images.sh to pull locally)
+Dawson's wiki/zz_images/
+
+# Capture bot message-id map (local state, not tracked)
+system/state/capture-msgmap.json

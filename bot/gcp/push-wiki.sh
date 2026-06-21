@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-# Commits and pushes any new capture files (inbox + zz_images) from the VM
-# back to origin/main so the local Mac can pull them and run /extract.
+# Commits and pushes new capture inbox notes from the VM back to origin/main
+# so the local Mac can pull them and run /extract.
+#
+# Images are NOT pushed via git — they are uploaded to GCS by capture_bot.py
+# and synced to the local Mac via bot/gcp/sync-images.sh before /extract.
 #
 # Intended to run on a schedule via cron, e.g. every 30 minutes:
 #   */30 * * * * /home/YOUR_USER/dawson_house_wiki/bot/gcp/push-wiki.sh >> /home/YOUR_USER/dawson_house_wiki/bot/logs/push.log 2>&1
@@ -17,8 +20,9 @@ echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] push-wiki: checking for new capture files
 
 cd "$REPO_DIR"
 
-# Only stage files the capture bot writes — never touch wiki/, system/, or bot/
-CAPTURE_PATHS=("Dawson's wiki/inbox/" "Dawson's wiki/zz_images/")
+# Only stage files the capture bot writes — never touch wiki/, system/, or bot/.
+# zz_images/ is excluded — images go to GCS, not git.
+CAPTURE_PATHS=("Dawson's wiki/inbox/")
 
 # Check if there's anything new to commit in those paths
 DIRTY=false

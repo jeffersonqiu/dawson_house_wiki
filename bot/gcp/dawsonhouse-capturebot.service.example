@@ -22,6 +22,7 @@ RestartSec=10
 # bot/gcp/setup-secrets.sh (on your Mac) first to create the secrets and grant
 # access. setup-vm.sh fills this in.
 Environment=GCP_PROJECT_ID=REPLACE_WITH_GCP_PROJECT_ID
+Environment=GCS_IMAGES_BUCKET=REPLACE_WITH_GCS_IMAGES_BUCKET
 
 # Hardening (optional but recommended — the bot only needs to read/write the
 # wiki's inbox + zz_images and reach the internet for Telegram + LLM APIs)

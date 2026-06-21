@@ -69,6 +69,7 @@ from telegram.ext import (
 
 import capture
 import daily_review
+import gcs_images
 from botconfig import config_value, ensure_model_api_key, load_allowed_user_ids, resolve_llm_model
 
 logging.basicConfig(
@@ -169,9 +170,16 @@ async def note_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         )
         return
 
+    when = capture.now()
     path = capture.append_entry(text)
     rel_path = path.relative_to(capture.REPO_ROOT)
-    await message.reply_text(f"Saved to {rel_path}")
+    heading = when.strftime("%H:%M")
+    conf = await message.reply_text(f"Saved to {rel_path}")
+    # Record both the user's message and the bot's reply so either can be replied
+    # to later to add context to this entry.
+    capture.record_message(message.message_id, when.date(), heading)
+    if conf:
+        capture.record_message(conf.message_id, when.date(), heading)
 
 
 async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -188,14 +196,27 @@ async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         return
 
     capture.IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+    when = capture.now()
     filename = capture.save_photo_filename()
+    local_path = capture.IMAGES_DIR / filename
     photo_file = await context.bot.get_file(message.photo[-1].file_id)
-    await photo_file.download_to_drive(custom_path=capture.IMAGES_DIR / filename)
+    await photo_file.download_to_drive(custom_path=local_path)
+
+    # Resize if oversized (≤2048px long edge), then upload to GCS.
+    # Local copy is kept — daily review reads it from disk same day.
+    gcs_images.resize_if_needed(local_path)
+    gcs_images.upload_image(local_path, filename)
 
     caption = (message.caption or "").strip()
     path = capture.append_entry(caption, image_filename=filename)
+    heading = when.strftime("%H:%M")
     rel_path = path.relative_to(capture.REPO_ROOT)
-    await message.reply_text(f"Saved photo to {rel_path}")
+    conf = await message.reply_text(f"Saved photo to {rel_path}")
+    # Record both the user's message and the bot's reply so either can be replied
+    # to later to add context to this entry.
+    capture.record_message(message.message_id, when.date(), heading)
+    if conf:
+        capture.record_message(conf.message_id, when.date(), heading)
 
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -219,12 +240,31 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     # If the user replied to an earlier message, treat it as context for that
     # capture entry (appended as "> text" under the matching ## HH:MM block).
     if message.reply_to_message is not None:
-        ref_date = message.reply_to_message.date  # timezone-aware UTC datetime
-        path = capture.append_context(ref_date, message.text.strip())
+        context_text = message.text.strip()
+        ref_msg_id = message.reply_to_message.message_id
+        path = None
+
+        # Primary: id-based lookup (100% reliable, survives time-zone edge cases)
+        entry = capture.lookup_message(ref_msg_id)
+        if entry is not None:
+            for_date, heading = entry
+            path = capture.append_context_by_heading(for_date, heading, context_text)
+
+        # Fallback: time-window match (handles messages before the map existed)
+        if path is None:
+            ref_date = message.reply_to_message.date
+            path = capture.append_context(ref_date, context_text)
+
         if path is not None:
             rel_path = path.relative_to(capture.REPO_ROOT)
             await message.reply_text(f"Added context to {rel_path}")
             return
+
+        await message.reply_text(
+            "Couldn't find a capture entry for that message. "
+            "Send it as /note <text> instead."
+        )
+        return
 
     await message.reply_text(
         "I only handle /note <text>, photos, and end-of-day review answers. "

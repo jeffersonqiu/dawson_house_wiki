@@ -2,3 +2,5 @@ python-telegram-bot[job-queue]==21.10
 litellm>=1.55.0
 python-dotenv>=1.0.1
 google-cloud-secret-manager>=2.20.0
+google-cloud-storage>=2.18.0
+pillow>=10.4.0
