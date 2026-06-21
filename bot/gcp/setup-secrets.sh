@@ -59,7 +59,7 @@ create_or_update_secret() {
 # Credentials that may appear in bot/.env, each pushed as its own secret
 # (secret ID == env var name) if non-empty. Add new *_API_KEY vars here as
 # new providers/tools are supported.
-CANDIDATE_VARS=(TELEGRAM_BOT_TOKEN CAPTURE_BOT_TOKEN ANTHROPIC_API_KEY OPENAI_API_KEY TAVILY_API_KEY)
+CANDIDATE_VARS=(TELEGRAM_BOT_TOKEN CAPTURE_BOT_TOKEN ANTHROPIC_API_KEY OPENAI_API_KEY TAVILY_API_KEY GITHUB_TOKEN)
 
 echo "==> Creating/updating secrets..."
 SECRETS_PUSHED=()
