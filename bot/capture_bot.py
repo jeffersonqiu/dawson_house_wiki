@@ -216,9 +216,20 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     if await daily_review.handle_free_text_answer(update, context):
         return
 
+    # If the user replied to an earlier message, treat it as context for that
+    # capture entry (appended as "> text" under the matching ## HH:MM block).
+    if message.reply_to_message is not None:
+        ref_date = message.reply_to_message.date  # timezone-aware UTC datetime
+        path = capture.append_context(ref_date, message.text.strip())
+        if path is not None:
+            rel_path = path.relative_to(capture.REPO_ROOT)
+            await message.reply_text(f"Added context to {rel_path}")
+            return
+
     await message.reply_text(
         "I only handle /note <text>, photos, and end-of-day review answers. "
-        "For chat/research, message the other bot."
+        "For chat/research, message the other bot.\n\n"
+        "Tip: reply to a photo or /note confirmation to add extra context to that entry."
     )
 
 

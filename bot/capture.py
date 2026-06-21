@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import os
 import pathlib
+import re
 from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
@@ -53,6 +54,61 @@ def append_entry(text: str, image_filename: str | None = None) -> pathlib.Path:
 
     with path.open("a", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
+    return path
+
+
+_HEADING_RE = re.compile(r"^## (\d{2}:\d{2})\b", re.MULTILINE)
+
+
+def append_context(reply_to_date: datetime, context_text: str) -> pathlib.Path | None:
+    """Append > context_text under the ## HH:MM block matching reply_to_date.
+
+    Looks in that day's capture file for a heading whose time is within 5 minutes
+    of reply_to_date (converted to WIKI_TZ). Returns the path on success, None
+    if no suitable block is found.
+    """
+    local_dt = reply_to_date.astimezone(WIKI_TZ)
+    path = capture_file_path(local_dt.date())
+    if not path.exists():
+        return None
+
+    content = path.read_text(encoding="utf-8")
+    matches = [(m.start(), m.group(1)) for m in _HEADING_RE.finditer(content)
+               if not content[m.start():].startswith("## Clarifications")]
+
+    if not matches:
+        return None
+
+    def _minutes(t: str) -> int:
+        h, m = t.split(":")
+        return int(h) * 60 + int(m)
+
+    target_min = _minutes(local_dt.strftime("%H:%M"))
+    best_pos, best_time = min(matches, key=lambda x: abs(_minutes(x[1]) - target_min))
+
+    if abs(_minutes(best_time) - target_min) > 5:
+        return None
+
+    next_positions = [pos for pos, _ in matches if pos > best_pos]
+    context_line = f"> {context_text}"
+
+    if next_positions:
+        insert_at = next_positions[0]
+        new_content = (
+            content[:insert_at].rstrip("\n") + f"\n{context_line}\n\n" + content[insert_at:]
+        )
+    else:
+        # Append before any ## Clarifications block if present
+        clarif_match = re.search(r"^## Clarifications", content, re.MULTILINE)
+        if clarif_match:
+            insert_at = clarif_match.start()
+            new_content = (
+                content[:insert_at].rstrip("\n") + f"\n{context_line}\n\n" + content[insert_at:]
+            )
+        else:
+            new_content = content.rstrip("\n") + f"\n{context_line}\n"
+
+    path.write_text(new_content, encoding="utf-8")
     return path
 
 
