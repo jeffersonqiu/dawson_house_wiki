@@ -2,7 +2,10 @@
 
 **Date:** 2026-06-13
 **Proposed by:** Extractor
-**Status:** awaiting human approval
+**Status:** ✅ APPROVED (2026-06-13, by Jefferson) — all 4 records approved as proposed
+(desk swap to Adan $139 is real; chair Kave Einara $275.40 ordered; Nuvira lamp dropped, note
+renamed to "Table Lamp (Kave Malachi)"; Ironing Set price → $599.00 low confidence; Smart Lock
+created as researching/low confidence).
 
 ## What to change
 

@@ -1,26 +1,23 @@
 ---
 name: Oven
 room: Kitchen
-status: shortlisted
-vendor: ""
-model: "Bosch Built-in Oven 71L HHF113BR0B"
-price: "$849.00"
+status: ordered
+vendor: "GRH Logistics"
+model: "Bosch HHF113BR0B Built-in Oven 66L (60×60 S/S)"
+price: "$749.00"
 currency: SGD
-confidence: medium
-source: "raw/sheets/reno-sheet-bud-studio-2026-06-07.md (Furniture & Appliances); raw/drive/skyville-dawson-bud-studio-first-draft-comments-2026-06-07.md (page 9)"
+confidence: high
+source: "raw/drive/grh-hoekee-hob-hood-oven-2026-06-14.md; raw/sheets/reno-sheet-bud-studio-2026-06-07.md (Update 2026-06-21)"
 ---
 
 # Oven
 
-Listed in the Reno Sheet tracker, not flagged "Confirmed". Render-comment page 9 notes
-*"Oven moves here, with stove"* — i.e. oven placement within the kitchen layout was being
-actively reworked during the design-review round, tied to the stove's final position. See
-[[TASK-0006 - Finalise kitchen stove-sink-oven-hood layout]].
+Same model code (HHF113BR0B) but capacity corrected from 71L to 66L, and price corrected from $849 to $749. Ordered via GRH Logistics SS-S017303 (14 Jun 2026), bundled with [[Hob]] + [[Hood]] ($2,850 total, $550 deposit paid).
 
 ## Sources
 
-- `raw/sheets/reno-sheet-bud-studio-2026-06-07.md` (Furniture & Appliances)
-- `raw/drive/skyville-dawson-bud-studio-first-draft-comments-2026-06-07.md` (page 9)
+- `raw/drive/grh-hoekee-hob-hood-oven-2026-06-14.md` — GRH Logistics Sales Order SS-S017303 (14 Jun 2026)
+- `raw/sheets/reno-sheet-bud-studio-2026-06-07.md` (Update 2026-06-21)
 
 ---
-*Compiled 2026-06-08 from approved review-queue proposal `system/review_queue/2026-06-07-kitchen-and-wholehouse-appliances.md`.*
+*Compiled 2026-06-08 from approved review-queue proposal `system/review_queue/2026-06-07-kitchen-and-wholehouse-appliances.md`. Updated 2026-06-21 (compile-03) from approved proposal `system/review_queue/2026-06-21-kitchen-appliances-hob-hood-oven-confirmed.md` — capacity corrected to 66L, price corrected to $749, status → ordered.*

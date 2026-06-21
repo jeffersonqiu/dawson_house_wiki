@@ -1,0 +1,3 @@
+- Jeff’s study table
+	- Considering: Interdesk (140cm x 70cm, Walnut color) ![[IMG_9211.jpeg]]
+- 

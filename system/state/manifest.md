@@ -1,6 +1,6 @@
 # Ingestion Manifest
 
-Last updated: 2026-06-13
+Last updated: 2026-06-21
 
 ## Google Drive folders
 
@@ -26,7 +26,13 @@ Last updated: 2026-06-13
 | 04 Renovation / 02 Furnitures / 03 Fridge, Washer, Microwave | `1Vk08Xt4abS_ArULZxw33EwMRlZIDcFcg` | Pulled (2/2 files) |
 | 04 Renovation / 02 Furnitures / 04 TV | `1qalFYiverZxQnp8q38FnX5rcuusAoYGx` | Pulled (1/1 file) |
 | 04 Renovation / 02 Furnitures / 05 Aircon | `1gIWl_9AuZaaLLk1p3WgQGTSfwMAYj7BC` | Pulled (1/1 file) |
-| 04 Renovation / 02 Furnitures / 06 Kave (Study chair + table lamp) | `16zAXLs2xnZ_41ypRPwTGSu4nJ87K6K14` | **NEW (created 2026-06-12)** — Pulled (1/1 file) 2026-06-13 |
+| 04 Renovation / 02 Furnitures / 05 Kave - Study chair, table lamp | `16zAXLs2xnZ_41ypRPwTGSu4nJ87K6K14` | Pulled (1/1 file) 2026-06-13; **RENAMED 2026-06-21** (was "06 Kave") — same Drive ID |
+| 04 Renovation / 02 Furnitures / 06 SleepNight - Bed frame, mattress | *(folder ID not recorded)* | **NEW (found 2026-06-21)** — Pulled 1/1 file: Sleepnight invoice LTB 100594 |
+| 04 Renovation / 02 Furnitures / 07 Hoekee - Hob, Hood, Oven | *(folder ID not recorded)* | **NEW (found 2026-06-21)** — Pulled 1/1 file: GRH sales order SS-S017303 |
+| 04 Renovation / 02 Furnitures / 08 Kave - Study Chair & Table Lamp | `1KS6PleXDA241r05EUThSeP1mELSDuQsd` | **NEW (found 2026-06-21)** — contains duplicate of Kave S04948 order; metadata-only |
+| 04 Renovation / 02 Furnitures / 09 Fortytwo - Murphy Bed & Risye's Study Desk | *(folder ID not recorded)* | **NEW (found 2026-06-21)** — Pulled 1/1 file: Fortytwo order #1001489322 |
+| 04 Renovation / 02 Furnitures / 10 Secret Furnishing - Curtains | *(folder ID not recorded)* | **NEW (found 2026-06-21)** — Pulled 2/2 files: invoice VT70917 + colour specs PDF |
+| 04 Renovation / 02 Furnitures / 11 Interdesk - Study Table Common Bedroom | *(folder ID not recorded)* | **NEW (found 2026-06-21)** — Pulled 1/1 file: sales receipt H#3037 |
 
 **Scope note:** Per the strict ingestion brief, ONLY the "04 Renovation" tree (and its full
 descendant subfolder tree) was walked and pulled. "10. House Purchase" was left untouched
@@ -36,7 +42,7 @@ descendant subfolder tree) was walked and pulled. "10. House Purchase" was left 
 
 | File | Source ID | Pulled | Local path |
 |------|-----------|--------|------------|
-| 02 Reno Sheet x Bud Studio [External] | `1cFfCsIXtQXqY4kU2dRp13rjjI5XJjmovX8wiUKnvV78` | 2026-06-07, **re-pulled 2026-06-13** (Drive `modifiedTime` 2026-06-12) | `raw/sheets/reno-sheet-bud-studio-2026-06-07.md` (same file, updated with "Update 2026-06-13" section) |
+| 02 Reno Sheet x Bud Studio [External] | `1cFfCsIXtQXqY4kU2dRp13rjjI5XJjmovX8wiUKnvV78` | 2026-06-07, re-pulled 2026-06-13, **re-pulled 2026-06-21** (Drive `modifiedTime` 2026-06-20) | `raw/sheets/reno-sheet-bud-studio-2026-06-07.md` (same file, appended with "Update 2026-06-21" section) |
 | 86 Dawson Road - Ownership Valuation | `1hYXyGA9EUXbc4fO8JFanUfK6-zxc5Q03NNCRBGItKDE` | 2026-06-07 | `raw/sheets/ownership-valuation-2026-06-07.md` |
 | claude_Marcella_Quotation_26R532 | `1nULbgkhTZkKi0MGkyYfzCMKTedhfLB19H7FFwg0HxtQ` | 2026-06-07 | `raw/sheets/claude-marcella-quotation-26r532-2026-06-07.md` |
 | 01 Floor plan - Dawson 05-03@141086.pdf | `10mFh8uI1siDVMx-Go0Ibxq-icDT61HRl` | 2026-06-07 | `raw/drive/floor-plan-dawson-05-03-2026-06-07.md` |
@@ -65,20 +71,29 @@ descendant subfolder tree) was walked and pulled. "10. House Purchase" was left 
 | 02 Reno Sheet.xlsm (binary — metadata only, not extractable) | `1u1VyORHiyh6bZEH2M-RMw5fzFmJbQTL-` | 2026-06-07 | `raw/drive/reno-sheet-xlsm-archive-2026-06-07.md` |
 | 01. By Luvina — 9 WhatsApp images (photo-only batch, metadata only) | folder `1X0gDPx3clK8SUxl_HAbWSiCRn7hYAT-8` | 2026-06-07 | `raw/drive/by-luvina-whatsapp-images-2026-06-07.md` |
 | Order - S04948.pdf — Kave Home (Einara chair + Malachi table lamp) | `1AEbfjP_RPVo9fN0QhzEg5ql24mLA2kk5` | 2026-06-13 | `raw/drive/kave-order-s04948-2026-06-13.md` |
+| Sleepnight Invoice LTB 100594 — Lux Grandeur (Bed Frame + Mattress, Master Bedroom) | `19pBWeQPoDBQNRLT-J1zgTaNNKr6MXZKF` | 2026-06-21 | `raw/drive/sleepnight-bed-frame-mattress-ltb100594-2026-06-14.md` |
+| Fortytwo Order #1001489322 — Murphy Bed (Grey) + Adan Desk (Maple/White) | `1qn_DSGYQiuMvq32HPEvou7ShPatVXhes` | 2026-06-21 | `raw/drive/fortytwo-order-murphy-bed-adan-desk-2026-06-15.md` |
+| GRH Logistics Sales Order SS-S017303 — Hob (Bertazzoni) + Hood (Bosch) + Oven (Bosch) | `1lrT69FktYQjKTUNfACBAMm8kDplU-3Rm` | 2026-06-21 | `raw/drive/grh-hoekee-hob-hood-oven-2026-06-14.md` |
+| Secret Furnishing Tax Invoice VT70917 — DANI curtains (Day & Night, all rooms) | `1IJKv39RYZIZTYviIH6rttAHLqKLHu564` | 2026-06-21 | `raw/drive/secret-furnishing-curtains-vt70917-2026-06-20.md` |
+| Secret Furnishing DANI Curtain Colour Specs (DANI-21 Earth, DANI-22 Rattan) | `1QCJZDbCZzir_L_ecZM6BldM2Y3x4Oysq` | 2026-06-21 | `raw/drive/secret-furnishing-curtains-colors-2026-06-20.md` |
+| Interdesk Sales Receipt H#3037 — Study Desk 140×70 Walnut (Common Bedroom) | `1-BSAMXMHYkhbr6rDJW1OElFrP90uIueq` | 2026-06-21 | `raw/drive/interdesk-sales-receipt-h3037-2026-06-20.md` |
+| Kave Order S04948 (1).pdf — duplicate copy in folder 08 (same content as S04948 above) | `1jXjRgAP3aNhavXhj1lkzaby0RkfIdQw7` | 2026-06-21 | metadata-only — same content as `raw/drive/kave-order-s04948-2026-06-13.md` |
+| **PENDING RE-PULL** — 01 Original floor plan - Dawson 05-03@141086.pdf (modifiedTime 2026-06-20) | `10mFh8uI1siDVMx-Go0Ibxq-icDT61HRl` | *(re-pull pending — was pulled 2026-06-07; modified on Drive 2026-06-20)* | `raw/drive/floor-plan-dawson-05-03-2026-06-07.md` (stale) |
 
-**Total: 28 snapshot rows covering 39 distinct Drive files** (some rows combine multiple
-Drive files: namecards = 2 PDFs; By Luvina = 9 JPEGs listed in one metadata batch file).
+**Total: 35 snapshot rows covering 47 distinct Drive files** (6 new rows added 2026-06-21; Kave duplicate and floor plan re-pull noted separately; namecards = 2 PDFs; By Luvina = 9 JPEGs).
 
 ## Change-check log
 
 | Date | Result |
 |------|--------|
 | 2026-06-13 | Ran `/ingest` change-check against the full `04 Renovation` tree (re-listed top level + `0 Archive` + `01 Bud Studio` + `02 Furnitures` with `modifiedTime > 2026-06-07`). Found 2 changes: (1) `02 Reno Sheet x Bud Studio [External]` modified 2026-06-12 — re-pulled, see updated `raw/sheets/reno-sheet-bud-studio-2026-06-07.md`. (2) New subfolder `02 Furnitures / 06 Kave (Study chair + table lamp)` created 2026-06-12, containing `Order - S04948.pdf` — pulled to `raw/drive/kave-order-s04948-2026-06-13.md`. All other subfolders unchanged. |
+| 2026-06-13 (later same day) | Ran `/ingest` change-check again (top level + `0 Archive` + `01 Bud Studio` + `02 Furnitures`, all subfolders). No changes since the check above — Reno Sheet `modifiedTime` unchanged (2026-06-12), no new/changed files or subfolders anywhere in the tree. See `system/runs/2026-06-13-ingestion-04.md`. |
+| 2026-06-21 | Major wave of changes found. Reno Sheet `modifiedTime` 2026-06-20 (re-pulled, "Update 2026-06-21" section appended). 6 new subfolders under `02 Furnitures` (06–11), each containing a purchase invoice/order: Sleepnight bed frame+mattress, GRH hob+hood+oven, Kave duplicate, Fortytwo murphy bed+desk, Secret Furnishing curtains (2 files), Interdesk study desk. Old `06 Kave` folder renamed to `05 Kave - Study chair, table lamp`. Floor plan PDF also shows modifiedTime 2026-06-20 — re-pull pending. See `system/runs/2026-06-21-ingestion-05.md`. |
 
-## Key Drive files (not yet pulled)
+## Key Drive files (not yet pulled / pending)
 
-*(none remaining in-scope — the entire "04 Renovation" tree has been walked and every file
-either extracted to `raw/` or recorded as a metadata-only entry with documented reason)*
+- **`01 Original floor plan - Dawson 05-03@141086.pdf`** (`10mFh8uI1siDVMx-Go0Ibxq-icDT61HRl`) — was pulled 2026-06-07; Drive `modifiedTime` now shows 2026-06-20. Content may have been updated. Re-pull on next ingestion pass to check for changes.
+- **Folder IDs for new subfolders 06–11 under `02 Furnitures`** — only folder 08 Kave ID was captured (`1KS6PleXDA241r05EUThSeP1mELSDuQsd`); IDs for 06 SleepNight, 07 Hoekee, 09 Fortytwo, 10 Secret Furnishing, 11 Interdesk were not recorded in this pass. Record on next visit.
 
 The "House Purchase 2026" spreadsheet (`1BbsrIVfoETvS1fj5ycjo3ePdiL_U8EgFzAmVyUxjiVM`) was
 checked and found to contain HOUSE-PURCHASE-scoped content (loan/ABSD/BSD/valuation tables),

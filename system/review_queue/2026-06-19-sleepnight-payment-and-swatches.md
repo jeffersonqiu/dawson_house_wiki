@@ -1,4 +1,4 @@
-**Status:** awaiting human approval
+**Status:** ✅ APPROVED + COMPILED (compile-03, 2026-06-21) — payment details incorporated into Bed Frame + Mattress.md and Lux Grandeur vendor note. Fabric swatches (MYSTIC 07 / STAN FR) held — low confidence, no context.
 
 # Sleepnight payment confirmation + fabric swatches — 2026-06-19
 

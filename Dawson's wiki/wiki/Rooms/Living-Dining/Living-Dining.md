@@ -33,11 +33,14 @@ treat it as a single space, so it's compiled here as one room.
 - [[Sound Bar]] — shortlisted, $899.00 (Sonos Beam Gen 2)
 - [[TV Console - Storage (IKEA EKET)]] — shortlisted, $260.00 (possible overlap w/ custom carpentry — see note)
 - [[Coffee Machine]] — shortlisted, $899.00 (Nespresso Creatista Plus)
-- [[Table Lamps (Kave)]] — shortlisted, $460.00 combined (Kave Malachi + Nuvira)
+- [[Table Lamp (Kave Malachi)]] — ordered, $190.40 (Kave Malachi)
+- [[Smart Lock]] — researching, $388.00 (Best D Digital Door Lock BDL-5000)
+- [[Settee Cushion + Upholstery]] — shortlisted, $950.00 (bycoesa.com — fabric/cushion for Bud Studio built-in settee)
 
 ## Open follow-ups
 
 - [[TASK-0007 - Track Other Furniture dining table — balance payment & delivery]]
+- [[TASK-0014 - Revert TV wall design to first layout + fix LED lighting gap]]
 
 ## Sources
 
@@ -47,4 +50,8 @@ treat it as a single space, so it's compiled here as one room.
 - `raw/drive/skyville-dawson-bud-studio-first-draft-comments-2026-06-07.md` (pages 3–9)
 
 ---
-*Compiled 2026-06-08 from approved review-queue proposal `system/review_queue/2026-06-07-living-dining-items.md`.*
+*Compiled 2026-06-08 from approved review-queue proposal `system/review_queue/2026-06-07-living-dining-items.md`. TASK-0014
+follow-up added 2026-06-14 from approved review-queue proposal
+`system/review_queue/2026-06-13-jaslyn-meeting-living-dining-tv-wall.md`. Table Lamp renamed/updated and Smart Lock added
+2026-06-14 from approved review-queue proposal
+`system/review_queue/2026-06-13-reno-sheet-update-master-bedroom-living-dining-common-bedroom.md`.*

@@ -15,8 +15,7 @@ the moodboard's "Kitchen: ... / Service Yard: ..." split.
 - Counter/cabinet below should be wider than cabinets above (less "stuffy" feel)
 - Dedicated coffee corner; "BRIGHT, two-tone cabinet, backsplash tiles & hidden lights, cool
   Japandi" aesthetic
-- Separate water filter for drinking water — **RESOLVED**: "3M AP Easy Complete (Under-Sink)"
-  filter + "RIGEL Kitchen Faucet" listed in the Reno Sheet tracker
+- Separate water filter for drinking water — **RESOLVED**: [[Water Filter]] (3M AP Easy Complete Under-Sink, $215). The previously-listed RIGEL/GROHE kitchen tap is now bundled into the [[Sink & Kitchen Mixer (Bundle)]] (Oslo 316 80cm set, $1,087.20 — includes mixer).
 
 ## Confirmed design decisions (first-draft render review, pages 6–9)
 
@@ -27,12 +26,13 @@ the moodboard's "Kitchen: ... / Service Yard: ..." split.
 - Considered an all-dark-brown finish (top + bottom hung cabinets) — referenced an Instagram
   inspiration image
 
-## Open layout question
+## Layout confirmed (2026-06-14)
 
-Stove / sink / oven / hood relative placement was still being actively reworked at
-design-review time — *"Replace sink with stove / Replace stove with sink"*; *"Oven moves
-here, with stove"*; *"Chimney hood on top of stove?"*. See
-[[TASK-0006 - Finalise kitchen stove-sink-oven-hood layout]].
+Stove / sink / oven / hood relative placement was finalised — all three appliances purchased via GRH Logistics SS-S017303 (14 Jun 2026). [[TASK-0006 - Finalise kitchen stove-sink-oven-hood layout]] — **CLOSED**.
+
+## Tile shortlist (Hafary, 2026-06-19)
+
+- **Floor tile — GM6615N:** 600×600mm glazed porcelain, China. $3.20 psf ($3.49 incl. 9% GST). Note: "ETP: 16/6" sticky note on label — confirm current stock with [[Hafary]] before ordering (availability date has passed).
 
 ## Bud Studio Appendix A scope for this area
 
@@ -42,14 +42,23 @@ here, with stove"*; *"Chimney hood on top of stove?"*. See
 - 3 of 4 Worktop/Countertop line items — Section K, ~$3,515 of $4,070 (Lian Hin quartz Raw
   Edition Tundra)
 
+> **2nd design revision (Jaslyn meeting, 2026-06-13):** the meeting discussed a travertine
+> countertop + round undermount sink "for easier maintenance" — this was initially read as a
+> possible conflict with the contracted quartz countertop above, but on review that discussion
+> is actually about [[Common Bathroom]], not Kitchen. Kitchen's countertop (Lian Hin quartz)
+> and sink ([[Sink]], Zuhne Oslo) stand as-is — no Change Order needed here. See
+> [[TASK-0008 - Confirm Common Bathroom vanity countertop material (travertine) and round undermount sink]].
+
 ## Items
 
 - [[Fridge]] — ordered, $1,759.00 (Gain City — Samsung 655L Side-By-Side)
 - [[Washer-Dryer]] — ordered, $1,664.00 (Gain City — Sharp combo unit)
 - [[Microwave]] — ordered, $152.00 (Gain City — Samsung 23L)
-- [[Hob]] — shortlisted, $1,159.00 (Bosch Induction)
-- [[Hood]] — shortlisted, $799.00 (Bosch Chimney Hood)
-- [[Oven]] — shortlisted, $849.00 (Bosch Built-in Oven)
+- [[Hob]] — ordered, $916.00 (GRH Logistics — Bertazzoni P603I30NV)
+- [[Hood]] — ordered, $1,179.00 (GRH Logistics — Bosch DWB97CM50B)
+- [[Oven]] — ordered, $749.00 (GRH Logistics — Bosch HHF113BR0B 66L)
+- [[Sink & Kitchen Mixer (Bundle)]] — shortlisted, $1,087.20 (Oslo 316 80cm Gunmetal bundle)
+- [[Water Filter]] — shortlisted, $215.00 (3M AP Easy Complete)
 
 > **Aircon note:** the LG System-2 Aircon (Gain City SO-B0000296812, $4,973.00) covers the
 > Master Bedroom + Living/Common Bedroom zones — it is a WHOLE-HOUSE system, not
@@ -61,7 +70,7 @@ here, with stove"*; *"Chimney hood on top of stove?"*. See
 
 - [[TASK-0001 - Fix under-sink wetness]]
 - [[TASK-0002 - Confirm exhaust fan plan for kitchen]]
-- [[TASK-0006 - Finalise kitchen stove-sink-oven-hood layout]]
+- ~~[[TASK-0006 - Finalise kitchen stove-sink-oven-hood layout]]~~ — CLOSED 2026-06-21
 
 ## Sources
 
@@ -71,4 +80,4 @@ here, with stove"*; *"Chimney hood on top of stove?"*. See
 - `raw/sheets/reno-sheet-bud-studio-2026-06-07.md` (Furniture & Appliances tracker)
 
 ---
-*Compiled 2026-06-08 from approved review-queue proposal `system/review_queue/2026-06-07-kitchen-and-wholehouse-appliances.md` (with the Aircon placement override documented in that file's human decision notes).*
+*Compiled 2026-06-08 from approved review-queue proposal `system/review_queue/2026-06-07-kitchen-and-wholehouse-appliances.md` (with the Aircon placement override documented in that file's human decision notes). Sink item + 2nd-design-revision cross-reference note added 2026-06-14 from approved review-queue proposal `system/review_queue/2026-06-13-jaslyn-meeting-kitchen-design-updates.md`.*

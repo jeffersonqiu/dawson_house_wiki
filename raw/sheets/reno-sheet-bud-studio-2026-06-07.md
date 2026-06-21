@@ -282,3 +282,112 @@ price).
 | Payment before fabrication of millworks | 35% | 25,481.75 |  |
 | Payment before millworks installation | 10% | 7,280.50 |  |
 | Last payment before handover | 5% | 3,640.25 |  |
+
+---
+
+## Update 2026-06-21 — what changed since the 2026-06-12 pull
+
+Re-pulled after `/ingest` (ingestion-05) detected `modifiedTime` 2026-06-20 (vs. prior pull 2026-06-13/12). Major wave of confirmed purchases — 7+ items upgraded from shortlisted/placeholder to Confirmed, 3 product changes, multiple new items added.
+
+### Furniture & Appliances — key changes
+
+- **Bed Frame + Mattress (Master Bedroom)** — MAJOR CHANGE: changed from Dunlopillo King Size Storage Drawer Bed Frame ($2,039, shortlisted) to **Sleepnight "Blissful sleep 10" Kingsize Mattress** (Crest Collection 10") **+ Kingsize Storage Drawer Bedframe** (no headboard, internal 114, Wego Brown WG 003 fabric), **$2,619**, **Confirmed**, $1,319 deposit paid, delivery 18-11-26. Source: Lux Grandeur Invoice LTB 100594, 14 Jun 2026 → `raw/drive/sleepnight-bed-frame-mattress-ltb100594-2026-06-14.md`.
+
+- **Murphy Bedframe (Common Bedroom)** — CHANGED: Fortytwo Alegra Vertical Murphy Bed **(Grey)**, **$1,307.04**, **Confirmed** (was Natural Queen, $1,899, $0.00 paid). Source: Fortytwo Order #1001489322 → `raw/drive/fortytwo-order-murphy-bed-adan-desk-2026-06-15.md`.
+
+- **Working / Vanity Desk (Master Bedroom)** — minor price change: Adan 1.2M Electric Adjustable Table (Maple/White) **$129.96** (was $139.00 in 2026-06-12 pull), **Confirmed**. Same Fortytwo Order #1001489322.
+
+- **Study Desk (Common Bedroom)** — CHANGED: Interdesk Ultra 140×70cm Walnut, Dual Motor electric height-adjustable, **$649.00**, **Confirmed, fully paid** (was Interdesk Classic 160×70, no price). Source: B.S. Furniture Sales H#3037, 20 Jun 2026 → `raw/drive/interdesk-sales-receipt-h3037-2026-06-20.md`.
+
+- **Hood (Kitchen)** — CHANGED: Bosch **DWB97CM50B** (DWZ2CB114 chimney hood + accessory kit), **$1,179**, **Confirmed** (was Bosch DWBM98G50B, $799). Source: GRH Logistics SS-S017303 → `raw/drive/grh-hoekee-hob-hood-oven-2026-06-14.md`.
+
+- **Hob (Kitchen)** — MAJOR CHANGE: **Bertazzoni P603I30NV Induction Hob** (3 Cooking Zones), **$916**, **Confirmed** (was Bosch PUE611BB5J, $1,159). Same GRH SS-S017303.
+
+- **Oven (Kitchen)** — price + capacity correction: Bosch HHF113BR0B **66L**, **$749**, **Confirmed** (was listed as 71L, $849, shortlisted). Same GRH SS-S017303.
+
+- **Sink & Kitchen Tap (Kitchen)** — MAJOR CHANGE: combined into a **bundle**: "Oslo 316 Workstation Sink & Kitchen Mixer Set 80cm / Gunmetal Honeycomb", **$1,087.20** (was separate Zuhne Oslo 60cm $788 + GROHE Eurosmart $499 = $1,287 combined — $200 cheaper as a bundle, and upgrades from 60cm to 80cm).
+
+- **Drinking Water Filter (Kitchen)** — MAJOR price change: 3M AP Easy Complete, **$215.00** (was $549.00). May now include a faucet; flag for confirmation.
+
+- **Curtains (All rooms)** — NEW confirmed purchase: **Secret Furnishing DANI collection** — DANI-21 Earth (day) + DANI-22 Rattan (night), 4-room flat, **$1,840**, **Confirmed**, $500 deposit paid (Amex). Measurement 16 Oct, installation 16 Nov. Source: Invoice VT70917 → `raw/drive/secret-furnishing-curtains-vt70917-2026-06-20.md`. Replaces the Day Curtain LACE RL040 placeholder and Night Curtain $0 rows.
+
+- **Settee Cushion & Upholstery (Living/Dining)** — NEW: bycoesa.com, **$950.00**.
+
+- **Headboard Cushion & Upholstery (Master Bedroom)** — NEW: bycoesa.com, **$950.00**.
+
+- **WC (Master Bathroom + Common Bathroom)** — price populated: **$799.00 × 2 = $1,598.00** (was $0 placeholder).
+
+- **Queen Size Mattress (Common Bedroom)** — CLARIFIED: Downtime Mattress Queen, **$0** — from current house, fully paid. No new purchase.
+
+- **TV Console (Living/Dining)** — NEW option added: Wilfredo 0.7M Modular Drawer, $79 × 3 = $237 (may be replacing the EKET units; listed as an option).
+
+### Contractor scope — draft VO / Change Order
+
+The 2026-06-20 reno sheet contains a second "commented" version of the contractor scope summary with potential reductions:
+- **Section J (Carpentry Works):** $26,595 → **$22,045** (−$4,550)
+- **Section D (Masonry & Wet Works):** $12,080 → **$11,690** (−$390)
+
+These appear to be a draft Variation Order being prepared. The main summary table still shows original figures. Do NOT update the primary contractor totals until a signed VO is received.
+
+---
+
+## Furniture & Appliances (current, as of 2026-06-20 — AUTHORITATIVE)
+
+| Item | Area | Brand and Model No. | Dimensions | @ Price | Qty | Total Price | Notes |
+| :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| Dining Table | Living/Dining | Custom | H75 x W180 x D90 | $1,450.00 | 1 | $1,450.00 | Confirmed |
+| Dining Chair | Living/Dining | EMILIE Modern Solid Wood Dining Chair | H45.8 x W50 x L50 | $329.00 | 3 | $987.00 |  |
+| TV | Living/Dining | 65" The Frame LS03HE 4K Samsung Vision AI Smart TV (2026) | 65" | $3,199.00 | 1 | $3,199.00 | Confirmed |
+| Sound Bar | Living/Dining | Sonos Beam Gen 2 Dolby Atmos Wireless Speaker | H6.9 x W65.1 x D10 | $899.00 | 1 | $899.00 |  |
+| Ceiling Lamp | Living/Dining |  |  |  |  | $0.00 |  |
+| Table Lamp | Living/Dining | Kave - Malachi | H22 x W20 x D20 | $190.40 | 1 | $190.40 | Confirmed (Kave order S04948) |
+| TV Console (option) | Living/Dining | Wilfredo 0.7M Modular Drawer | 0.7M | $79.00 | 3 | $237.00 | **NEW 2026-06-20** |
+| TV Console | Living/Dining | IKEA EKET Cabinet w door and 1 shelf, brown walnut effect, 35x35x70cm | H70 x W35 x D35 | $85.00 | 2 | $170.00 |  |
+| TV Console | Living/Dining | IKEA EKET Cabinet, brown walnut effect, 35x25x35cm | H35 x W35 x D25 | $30.00 | 3 | $90.00 |  |
+| Carpet | Living/Dining | IKEA STARREKLINTE Rug, flatwoven, natural/black, 120x180cm | L180 x W120 |  |  | $0.00 |  |
+| Night Curtain | Living/Dining |  |  |  |  | $0.00 | see Curtains row below |
+| Coffee Machine | Living/Dining | Nespresso Creatista Plus | H30.9 x W17 x D40.9 | $899.00 | 1 | $899.00 |  |
+| Wall Art | Living/Dining |  |  |  |  | $0.00 |  |
+| Smart Lock | Living/Dining | Best D Digital Door Lock BDL-5000 |  | $388.00 | 1 | $388.00 |  |
+| Settee Cushion & Upholstery | Living/Dining | bycoesa.com |  | $950.00 | 1 | $950.00 | **NEW 2026-06-20** |
+| Curtains (Day & Night, all applicable rooms) | All rooms | Secret Furnishing — DANI collection: DANI-21 Earth (day) + DANI-22 Rattan (night) |  | $1,840.00 | 1 | $1,840.00 | **NEW 2026-06-20** — Confirmed, $500 deposit paid; measure 16 Oct, install 16 Nov |
+| Ceiling Fan | Kitchen | Bestar Duo-MW/WD 16" DC Fan (White Case + Wood Blade) | 16" | $168.00 | 1 | $168.00 |  |
+| Airfryer | Kitchen | PHILIPS NA462/79 4000 SERIES DUAL STACK AIR FRYER (10L) | L46.9 x W23.3 x D39.9 | $299.00 | 1 | $299.00 |  |
+| Washer/Dryer | Kitchen | SHARP WASHER/DRYER-12.5/8KG ES-FW12D8PAS | W59.8 x H85.0 x D64.0cm | $1,577.94 | 1 | $1,577.94 | Confirmed |
+| Fridge | Kitchen | Samsung 655L Side-By-Side Refrigerator RS70F65Q3TSS | W91.2 x H178.0 x D71.6cm | $1,501.13 | 1 | $1,501.13 | Confirmed |
+| Microwave | Kitchen | SAMSUNG MICROWAVE OVEN 23L MS23DG4504AGSP | W48.9 x H27.5 x D37.7cm | $144.22 | 1 | $144.22 | Confirmed |
+| Oven | Kitchen | Bosch HHF113BR0B Built-in Oven 66L 60×60 S/S |  | $749.00 | 1 | $749.00 | **CHANGED 2026-06-20** — price $849→$749, Confirmed (GRH SS-S017303) |
+| Hob | Kitchen | Bertazzoni P603I30NV Induction Hob (3 Cooking Zones) |  | $916.00 | 1 | $916.00 | **CHANGED 2026-06-20** — brand Bosch PUE611BB5J $1,159 → Bertazzoni P603I30NV $916, Confirmed (GRH SS-S017303) |
+| Hood | Kitchen | Bosch DWB97CM50B (DWZ2CB114) Chimney Hood |  | $1,179.00 | 1 | $1,179.00 | **CHANGED 2026-06-20** — model & price: DWBM98G50B $799 → DWB97CM50B $1,179, Confirmed (GRH SS-S017303) |
+| Sink & Kitchen Tap (Bundle) | Kitchen | Oslo 316 Workstation Sink & Kitchen Mixer Set 80cm / Gunmetal Honeycomb | 80cm | $1,087.20 | 1 | $1,087.20 | **CHANGED 2026-06-20** — bundle replaces separate Zuhne Oslo 60cm $788 + GROHE Eurosmart $499 |
+| Drinking Tap | Kitchen | RIGEL KITCHEN FAUCET W3-K-SA7003L | L18 x H36 | $99.00 | 1 | $99.00 |  |
+| Drinking Water Filter | Kitchen | 3M AP Easy Complete (Under-Sink) |  | $215.00 | 1 | $215.00 | **CHANGED 2026-06-20** — price $549→$215 |
+| Dryer Rack | Kitchen |  |  |  |  | $0.00 |  |
+| Robot Vacuum | Kitchen |  |  |  |  | $0.00 |  |
+| Automated Drying Rack | Kitchen |  |  |  |  | $0.00 |  |
+| Night Curtain | Master Bedroom |  |  |  |  | $0.00 | see Curtains row above |
+| Bed Frame + Mattress | Master Bedroom | Sleepnight "Blissful sleep 10" Kingsize Mattress (Crest Collection 10") + Kingsize Storage Drawer Bedframe (no headboard, internal 114, Wego Brown WG 003 fabric) |  | $2,619.00 | 1 | $2,619.00 | **CHANGED 2026-06-20** — Confirmed, $1,319 deposit paid, delivery 18-11-26 (was Dunlopillo King Size, $2,039) |
+| Bedside Table | Master Bedroom |  |  |  | 2 | $0.00 |  |
+| Bedside Lamp | Master Bedroom |  |  |  |  | $0.00 |  |
+| Carpet | Master Bedroom |  |  |  |  | $0.00 |  |
+| TV | Master Bedroom |  | 65" |  |  | $0.00 |  |
+| Working / Vanity Desk | Master Bedroom | Adan 1.2M Electric Adjustable Table (Maple/White) | Table top 120x60cm; legs adj H75-110cm | $129.96 | 1 | $129.96 | **CHANGED 2026-06-20** — price $139→$129.96, Confirmed (Fortytwo order #1001489322) |
+| Working / Vanity Chair | Master Bedroom | Kave Einara | H84 x W59 x D60 | $275.40 | 1 | $275.40 | Confirmed (Kave order S04948) |
+| Headboard Cushion & Upholstery | Master Bedroom | bycoesa.com |  | $950.00 | 1 | $950.00 | **NEW 2026-06-20** |
+| Wall Art | Master Bedroom |  |  |  |  | $0.00 |  |
+| Wall Art Lamp | Master Bedroom |  |  |  |  | $0.00 |  |
+| Murphy Bedframe | Common Bedroom | Fortytwo Alegra Vertical Murphy Bed (Grey) |  | $1,307.04 | 1 | $1,307.04 | **CHANGED 2026-06-20** — Confirmed; was Natural Queen $1,899, $0 paid (Fortytwo order #1001489322) |
+| Queen Size Mattress | Common Bedroom | Downtime Mattress - Queen | W152 x D190 x H20.5 | $0.00 | 1 | $0.00 | **CLARIFIED 2026-06-20** — from current house, fully paid |
+| Study Desk (Jeff) | Common Bedroom | Interdesk Ultra 140×70cm Walnut, Dual Motor electric height-adjustable | L140 x W70 x H25mm tabletop | $649.00 | 1 | $649.00 | **CHANGED 2026-06-20** — Confirmed, fully paid (B.S. Furniture H#3037, 20/06/2026) |
+| Study Chair | Common Bedroom |  |  |  |  |  |  |
+| Night Curtain | Common Bedroom |  |  |  |  | $0.00 | see Curtains row above |
+| Ironing Set | Common Bedroom | PHILIPS AIS8540/80 ALL-IN-ONE 8500 SERIES | W39.2 x H60.2 x D597 | $599.00 | 1 | $599.00 |  |
+| WC | Master Bathroom | (model TBD) |  | $799.00 | 1 | $799.00 | **UPDATED 2026-06-20** — price populated |
+| Sink | Master Bathroom |  |  |  |  | $0.00 |  |
+| Faucet | Master Bathroom |  |  |  |  | $0.00 |  |
+| WC | Common Bathroom | (model TBD) |  | $799.00 | 1 | $799.00 | **UPDATED 2026-06-20** — price populated |
+| Sink | Common Bathroom |  |  |  |  | $0.00 |  |
+| Faucet | Common Bathroom |  |  |  |  | $0.00 |  |
+| Aircon | All rooms | 2x LG System 2 Aircon — 1 unit living room, 1 unit bedroom 2, 2 units master bedroom |  | $4,973.00 | 1 | $4,973.00 | Confirmed |
+
+*(Total not recomputed — table reconstructed from diff against 2026-06-12 pull. Individual figures are authoritative; running total may differ from Drive sheet.)*

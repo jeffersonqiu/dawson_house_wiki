@@ -1,4 +1,4 @@
-**Status:** awaiting human approval
+**Status:** ✅ APPROVED + COMPILED (compile-03, 2026-06-21) — tile shortlists added to Common Bathroom, Master Bathroom, and Kitchen room notes; Hafary vendor note created.
 
 # Hafary tile shortlist — 2026-06-19
 

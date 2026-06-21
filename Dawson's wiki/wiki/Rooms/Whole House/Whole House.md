@@ -22,6 +22,7 @@ canonical home for those.
 ## Items
 
 - [[Aircon]] — ordered, $4,973.00 (Gain City — LG System 2, two zones)
+- [[Curtains (Day & Night)]] — ordered, $1,840.00 (Secret Furnishing — DANI collection, whole flat; measurement 16 Oct 2026, installation 16 Nov 2026)
 
 ## Sources
 
