@@ -41,18 +41,7 @@ if [ -z "$PROJECT_ID" ]; then
   exit 1
 fi
 
-GITHUB_TOKEN="$(
-  python3 - <<'EOF'
-import sys
-from google.cloud import secretmanager
-client = secretmanager.SecretManagerServiceClient()
-import os
-project = os.environ["GCP_PROJECT_ID"]
-name = f"projects/{project}/secrets/GITHUB_TOKEN/versions/latest"
-resp = client.access_secret_version(request={"name": name})
-sys.stdout.write(resp.payload.data.decode("utf-8"))
-EOF
-)"
+GITHUB_TOKEN="$(gcloud secrets versions access latest --secret=GITHUB_TOKEN --project="$PROJECT_ID" 2>/dev/null)"
 
 if [ -z "$GITHUB_TOKEN" ]; then
   echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] push-wiki: GITHUB_TOKEN empty — aborting." >&2
