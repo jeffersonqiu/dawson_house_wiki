@@ -1,9 +1,9 @@
 To remind Jaslyn
-- Under sink wetness
-- Exhaust in kitchen
-- Shoe rack holes
-- Skirting in kitchen
-- 3M water filter installation
+- [ ] Under sink wetness
+- [x] Exhaust in kitchen
+- [ ] Shoe rack holes
+- [x] Skirting in kitchen
+- [ ] 3M water filter installationa
 
 
 For Jeff
