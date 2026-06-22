@@ -34,7 +34,7 @@ underlying `capture.py`/`daily_review.py` modules.
 
 ## Outputs
 
-- `Dawson's wiki/inbox/{YYYY-MM-DD} telegram capture.md` — one file per day,
+- `Dawson's wiki/inbox/telegram/{YYYY-MM-DD} telegram capture.md` — one file per day,
   timestamped entries (`## HH:MM`), Obsidian image embeds (`![[filename]]`)
   for photos
 - `Dawson's wiki/zz_images/tg-{timestamp}.jpg` — photos captured via Telegram
@@ -45,7 +45,7 @@ underlying `capture.py`/`daily_review.py` modules.
 
 ## May write
 
-- `Dawson's wiki/inbox/**` — **new files only** (one per day); appends to its
+- `Dawson's wiki/inbox/telegram/**` — **new files only** (one per day); appends to its
   own `{date} telegram capture.md` files only, never edits or deletes other
   inbox notes
 - `Dawson's wiki/zz_images/**` — new photo files only
