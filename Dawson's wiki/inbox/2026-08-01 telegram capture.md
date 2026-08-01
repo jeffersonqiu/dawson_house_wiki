@@ -18,3 +18,7 @@ Sintered stone, smoother
 ## 11:47
 Sintered stone (smooth)
 ![[tg-20260801-114741.jpg]]
+
+## 13:18
+Common bedroom
+![[tg-20260801-131818.jpg]]
