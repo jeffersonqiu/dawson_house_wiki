@@ -1,6 +1,7 @@
 ---
 source: telegram-capture
 date: 2026-08-01
+reviewed: true
 ---
 
 ## 11:39
@@ -22,3 +23,11 @@ Sintered stone (smooth)
 ## 13:18
 Common bedroom
 ![[tg-20260801-131818.jpg]]
+
+## Clarifications (2026-08-02 10:52)
+- Q: Which vendor is associated with the sintered stone?
+  A: Lian Hin
+- Q: What is the price for the sintered stone?
+  A: $200 pfr
+- Q: Which room is the pendant light intended for?
+  A: Common bed room
