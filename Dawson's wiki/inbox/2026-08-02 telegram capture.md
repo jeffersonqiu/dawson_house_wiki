@@ -10,3 +10,10 @@ Common bed room (work lamp)
 ## 10:57
 Front facing picture
 ![[tg-20260802-105753.jpg]]
+
+## 11:04
+![[tg-20260802-110432.jpg]]
+
+## 11:04
+Potential living room chair
+![[tg-20260802-110434.jpg]]
