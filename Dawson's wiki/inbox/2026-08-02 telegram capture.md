@@ -17,3 +17,7 @@ Front facing picture
 ## 11:04
 Potential living room chair
 ![[tg-20260802-110434.jpg]]
+
+## 11:56
+Miscellaneous
+![[tg-20260802-115656.jpg]]
