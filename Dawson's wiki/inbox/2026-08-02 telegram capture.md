@@ -21,3 +21,7 @@ Potential living room chair
 ## 11:56
 Miscellaneous
 ![[tg-20260802-115656.jpg]]
+
+## 14:27
+Pluto digital lock
+![[tg-20260802-142747.jpg]]
