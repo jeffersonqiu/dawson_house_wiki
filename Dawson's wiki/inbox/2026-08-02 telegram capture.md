@@ -1,6 +1,7 @@
 ---
 source: telegram-capture
 date: 2026-08-02
+reviewed: true
 ---
 
 ## 10:57
@@ -25,3 +26,11 @@ Miscellaneous
 ## 14:27
 Pluto digital lock
 ![[tg-20260802-142747.jpg]]
+
+## Clarifications (2026-08-08 13:39)
+- Q: Which room is the work lamp intended for?
+  A: Common Bedroom
+- Q: What is the price of the potential living room chair?
+  A: $235
+- Q: What is the price of the Pluto digital lock?
+  A: $699
